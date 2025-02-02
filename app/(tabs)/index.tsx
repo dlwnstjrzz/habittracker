@@ -1,98 +1,123 @@
-import { Image, StyleSheet, Platform, Text } from "react-native";
+import { View, ScrollView, Pressable } from "react-native";
+import { useState } from "react";
+import { format, startOfWeek, addDays } from "date-fns";
+import { ko } from "date-fns/locale";
+import { CustomText } from "@/components/CustomText";
+import { Character3D } from "@/components/Character3D";
 
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import type { SliderProps } from "tamagui";
-import { Slider, XStack } from "tamagui";
+// GLB 파일 import
+const characterModel = require("../../assets/models/animals/Colobus_Animations.glb");
 
-function SimpleSlider({ children, ...props }: SliderProps) {
+function MainScreen() {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
   return (
-    <Slider defaultValue={[50]} max={100} step={1} {...props}>
-      <Slider.Track>
-        <Slider.TrackActive />
-      </Slider.Track>
-      <Slider.Thumb size="$2" index={0} circular />
-      {children}
-    </Slider>
-  );
-}
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
+    <View className="flex-1 bg-white">
+      {/* Character Section */}
+      <View className="h-[200px] items-center justify-center bg-gray-50">
+        <Character3D modelUrl={characterModel} />
+      </View>
+
+      {/* Calendar Strip */}
+      <WeeklyCalendar
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+      />
+
+      {/* Todo Lists */}
+      <ScrollView className="flex-1 px-4">
+        <TodoCategory
+          title="창업"
+          items={[{ id: "1", text: "하루 4시간 이상 창업 일하기" }]}
         />
-      }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText className="text-white" type="title">
-          Welcome!
-        </ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <XStack height={200} alignItems="center" gap="$8">
-          <SimpleSlider height={200} orientation="vertical" />
-          <SimpleSlider width={200} />
-        </XStack>
-
-        <ThemedText>
-          Edit{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          to see changes. Press{" "}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
-            })}
-          </ThemedText>{" "}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this
-          starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{" "}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <TodoCategory
+          title="운동"
+          items={[{ id: "2", text: "30분 이상 러닝하기" }]}
+        />
+        <TodoCategory
+          title="자기개발"
+          items={[{ id: "3", text: "CS공부하기" }]}
+        />
+      </ScrollView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
-  },
-});
+function WeeklyCalendar({
+  selectedDate,
+  onSelectDate,
+}: {
+  selectedDate: Date;
+  onSelectDate: (date: Date) => void;
+}) {
+  const startDate = startOfWeek(new Date(), { weekStartsOn: 1 });
+
+  return (
+    <View className="flex-row justify-between px-4 py-3 bg-white">
+      {[...Array(7)].map((_, i) => {
+        const date = addDays(startDate, i);
+        const dayName = format(date, "E", { locale: ko });
+        const dayNumber = format(date, "d");
+        const isSelected =
+          format(date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd");
+
+        return (
+          <Pressable
+            key={i}
+            onPress={() => onSelectDate(date)}
+            className={`items-center w-12 py-2 rounded-full
+              ${isSelected ? "bg-blue-500" : "bg-white"}`}
+          >
+            <CustomText
+              size="sm"
+              className={isSelected ? "text-white" : "text-gray-500"}
+            >
+              {dayName}
+            </CustomText>
+            <CustomText
+              size="base"
+              className={isSelected ? "text-white" : "text-black"}
+            >
+              {dayNumber}
+            </CustomText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function TodoCategory({
+  title,
+  items,
+}: {
+  title: string;
+  items: Array<{ id: string; text: string }>;
+}) {
+  return (
+    <View className="mt-4">
+      <View className="flex-row items-center justify-between mb-2">
+        <CustomText size="lg">{title}</CustomText>
+        <Pressable className="p-2">
+          <CustomText size="lg">+</CustomText>
+        </Pressable>
+      </View>
+      {items.map((item) => (
+        <TodoItem key={item.id} item={item} />
+      ))}
+    </View>
+  );
+}
+
+function TodoItem({ item }: { item: { id: string; text: string } }) {
+  return (
+    <View className="flex-row items-center py-2 px-4 bg-gray-50 rounded-lg mb-2">
+      <Pressable className="w-6 h-6 border-2 border-blue-500 rounded-full mr-3" />
+      <CustomText size="lg" weight="bold">
+        {item.text}
+      </CustomText>
+    </View>
+  );
+}
+
+export default MainScreen;

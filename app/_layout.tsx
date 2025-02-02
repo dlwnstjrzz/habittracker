@@ -13,25 +13,38 @@ import "../global.css";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { createTamagui, TamaguiProvider, View } from "tamagui";
 import { defaultConfig } from "@tamagui/config/v4";
+import { Platform, LogBox } from "react-native";
+import { GLView } from "expo-gl";
 
 const config = createTamagui(defaultConfig);
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
+// Android WebGL 설정
+if (Platform.OS === "android") {
+  LogBox.ignoreLogs(["expo-gl-cpp"]);
+  // @ts-ignore
+  global.WebGL2RenderingContext = GLView.createContextAsync;
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+  const [fontsLoaded] = useFonts({
+    "SpoqaHanSansNeo-Thin": require("../assets/fonts/SpoqaHanSansNeo-Thin.ttf"),
+    "SpoqaHanSansNeo-Light": require("../assets/fonts/SpoqaHanSansNeo-Light.ttf"),
+    "SpoqaHanSansNeo-Regular": require("../assets/fonts/SpoqaHanSansNeo-Regular.ttf"),
+    "SpoqaHanSansNeo-Medium": require("../assets/fonts/SpoqaHanSansNeo-Medium.ttf"),
+    "SpoqaHanSansNeo-Bold": require("../assets/fonts/SpoqaHanSansNeo-Bold.ttf"),
   });
 
   useEffect(() => {
-    if (loaded) {
+    if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [fontsLoaded]);
 
-  if (!loaded) {
+  if (!fontsLoaded) {
     return null;
   }
 
