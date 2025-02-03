@@ -1,28 +1,47 @@
 import { View, ScrollView, Pressable } from "react-native";
-import { useState } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { format, startOfWeek, addDays } from "date-fns";
 import { ko } from "date-fns/locale";
 import { CustomText } from "@/components/CustomText";
 import { Character3D } from "@/components/Character3D";
 
-// GLB 파일 import
-const characterModel = require("../../assets/models/animals/Colobus_Animations.glb");
+import { WeeklyDatePicker } from "@/components/WeeklyDatePicker";
+
+// @ts-ignore
+import characterModel from "../../assets/models/animals/Rabby.fbx";
+// @ts-ignore
+import characterAnimation from "../../assets/models/animals/Anim_Rabby_Idle.fbx";
+// @ts-ignore
+import characterTexture from "../../assets/models/Textures/T_Rabby_01.png";
 
 function MainScreen() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  // 컴포넌트 마운트 시 초기 날짜 설정
+  useEffect(() => {
+    setSelectedDate(new Date());
+  }, []);
 
   return (
     <View className="flex-1 bg-white">
       {/* Character Section */}
-      <View className="h-[200px] items-center justify-center bg-gray-50">
-        <Character3D modelUrl={characterModel} />
+      <View className="h-[400px] items-center justify-center bg-gray-50">
+        <Character3D
+          modelUrl={characterModel}
+          animationUrl={characterAnimation}
+          textureUrl={characterTexture}
+        />
       </View>
 
       {/* Calendar Strip */}
-      <WeeklyCalendar
-        selectedDate={selectedDate}
-        onSelectDate={setSelectedDate}
-      />
+      {selectedDate && (
+        <WeeklyDatePicker
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          completedTasks={3}
+          totalTasks={5}
+        />
+      )}
 
       {/* Todo Lists */}
       <ScrollView className="flex-1 px-4">
