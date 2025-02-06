@@ -98,6 +98,18 @@ export function Character3D({
   return (
     <View className="w-full h-[400px]" {...events}>
       <Canvas
+        events={null}
+        onCreated={(state) => {
+          const _gl = state.gl.getContext();
+          const pixelStorei = _gl.pixelStorei.bind(_gl);
+          _gl.pixelStorei = function (...args) {
+            const [parameter] = args;
+            switch (parameter) {
+              case _gl.UNPACK_FLIP_Y_WEBGL:
+                return pixelStorei(...args);
+            }
+          };
+        }}
         camera={{ position: [6, 2, 10], fov: 60 }}
         gl={{
           powerPreference: "high-performance",

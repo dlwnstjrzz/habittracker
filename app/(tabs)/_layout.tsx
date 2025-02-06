@@ -2,7 +2,7 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GalleryHorizontalEnd, BarChart3, User } from "lucide-react-native";
-import { CustomText } from "@/components/CustomText";
+import { CustomText } from "@/components/common/CustomText";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 
@@ -17,17 +17,15 @@ export default function TabLayout() {
         tabBarInactiveTintColor: "#999",
         headerShown: false,
         tabBarStyle: {
-          height: 65 + insets.bottom,
+          height: 60 + insets.bottom,
+          paddingTop: 10,
+          paddingBottom: insets.bottom,
           backgroundColor: "white",
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
-          paddingTop: 0,
-          paddingBottom: 8 + insets.bottom,
         },
-        tabBarItemStyle: {
-          paddingVertical: 0,
-        },
+
         tabBarLabel: ({ children, color }) => (
           <CustomText
             size="xs"

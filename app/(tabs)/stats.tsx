@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { CustomText } from "@/components/CustomText";
+import { CustomText } from "@/components/common/CustomText";
 
 export default function StatsScreen() {
   return (

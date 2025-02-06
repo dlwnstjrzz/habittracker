@@ -1,50 +1,74 @@
-# Welcome to your Expo app 👋
+# HabitTracker Todo List
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 기능 구현
 
-## Get started
+### 1단계: 기본 기능
 
-1. Install dependencies
+- [ ] 카테고리 관리
 
-   ```bash
-   npm install
-   ```
+  - [ ] 카테고리 추가
+  - [ ] 카테고리 삭제
+  - [ ] 카테고리 수정
+    - [ ] 이름 변경
+    - [ ] 색상 변경 (미리 정의된 색상 팔레트)
+  - [ ] 카테고리 순서 변경
+    - [ ] 드래그 앤 드롭 모드
+    - [ ] 드래그 핸들 UI
+    - [ ] 순서 변경 모드 진입/종료
 
-2. Start the app
+- [ ] 할일 관리
 
-   ```bash
-    npx expo start
-   ```
+  - [ ] 할일 추가
+  - [ ] 할일 삭제
+  - [ ] 할일 수정
+  - [ ] 할일 완료/미완료 토글
+  - [ ] 할일 순서 변경 (드래그 앤 드롭)
 
-In the output, you'll find options to open the app in a
+- [ ] 데이터 저장
+  - [ ] AsyncStorage를 사용한 로컬 저장
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 2단계: UI/UX 개선
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- [ ] UI/UX
+  - [ ] 카테고리 관리 UI
+    - [ ] 액션 시트 구현
+    - [ ] 수정 모달 구현
+    - [ ] 색상 선택 팔레트
+    - [ ] 드래그 앤 드롭 애니메이션
+  - [ ] 할일 완료 시 애니메이션
+  - [ ] 스와이프로 할일 삭제/수정
+  - [ ] 할일 추가 시 부드러운 애니메이션
+  - [ ] 다크모드 지원
 
-## Get a fresh project
+### 3단계: 추가 기능
 
-When you're ready, run:
+- [ ] 통계
 
-```bash
-npm run reset-project
-```
+  - [ ] 일간/주간/월간 완료율
+  - [ ] 카테고리별 완료율
+  - [ ] 연속 달성 스트릭
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- [ ] 기타
+  - [ ] 알림 설정
+  - [ ] 할일 공유 기능
 
-## Learn more
+## 버그 수정
 
-To learn more about developing your project with Expo, look at the following resources:
+- [ ] 추후 발견되는 버그 추가 예정
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+진입점:
+현재 각 카테고리의 MoreVertical 버튼을 클릭하면 모달이나 액션시트가 표시됨
+기본 액션: "순서 변경", "카테고리 수정", "카테고리 삭제"
+순서 변경:
+별도의 "카테고리 순서 변경" 모드로 진입
+각 카테고리 왼쪽에 드래그 핸들(::) 아이콘이 나타남
+드래그 앤 드롭으로 순서 변경
+상단에 "완료" 버튼으로 모드 종료
+카테고리 수정 모달:
+이름 변경 입력 필드
+색상 선택 옵션 (미리 정의된 색상 팔레트)
+하단에 "저장"/"취소" 버튼
+색상 선택:
+원형 또는 사각형 색상 버튼들을 그리드로 배치
+현재 선택된 색상 표시
+8-10개 정도의 미리 정의된 색상 옵션

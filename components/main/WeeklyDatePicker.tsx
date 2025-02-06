@@ -10,9 +10,24 @@ import {
 } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Stack, XStack, styled } from "tamagui";
-import { CustomText } from "./CustomText";
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react-native";
+import { CustomText } from "../common/CustomText";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Check,
+  CircleCheck,
+  CheckCheck,
+} from "lucide-react-native";
 import { useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+
+interface DateButtonProps {
+  selected: boolean;
+  isToday: boolean;
+  hasStreak: boolean;
+  children: React.ReactNode;
+}
 
 interface WeeklyDatePickerProps {
   selectedDate: Date;
@@ -21,62 +36,39 @@ interface WeeklyDatePickerProps {
   totalTasks?: number;
 }
 
-const DateButton = styled(Stack, {
-  width: 40,
-  height: 40,
-  borderRadius: 12,
-  alignItems: "center",
-  justifyContent: "center",
-  variants: {
-    selected: {
-      true: {
-        backgroundColor: "#3B82F6",
-        backgroundImage: "linear-gradient(135deg, #5A9FFF 0%, #3B82F6 100%)",
-        shadowColor: "#3B82F6",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3,
-      },
-      false: {
-        backgroundColor: "transparent",
-      },
-    },
-    isToday: {
-      true: {
-        borderWidth: 1.5,
-        borderColor: "#3B82F6",
-      },
-    },
-    hasStreak: {
-      true: {
-        after: {
-          content: "🔥",
-          position: "absolute",
-          top: -8,
-          fontSize: 10,
-        },
-      },
-    },
-  } as const,
-});
+function DateButton({
+  selected,
+  isToday,
+  hasStreak,
+  children,
+}: DateButtonProps) {
+  return (
+    <View
+      className={`w-10 h-10 rounded-xl items-center justify-center ${
+        selected ? "bg-blue-500" : "bg-transparent"
+      } ${isToday ? "border-2 border-blue-500" : ""}`}
+    >
+      {children}
+    </View>
+  );
+}
 
 const TaskProgress = ({
-  completed,
-  total,
+  completed: completedTasks,
+  total: totalTasks,
 }: {
   completed: number;
   total: number;
 }) => (
   <View className="flex-row items-center bg-blue-50 px-3 py-1.5 rounded-full">
     <CustomText size="base" weight="bold" className="text-blue-600">
-      {completed}
+      {completedTasks}
     </CustomText>
     <CustomText size="base" className="text-blue-400 mx-0.5">
       /
     </CustomText>
     <CustomText size="base" weight="medium" className="text-blue-500">
-      {total}
+      {totalTasks}
     </CustomText>
   </View>
 );
@@ -119,74 +111,86 @@ export function WeeklyDatePicker({
 
   return (
     <View className="px-4 py-3">
-      {/* 헤더 영역 수정 */}
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-row items-center space-x-4">
-          {/* 월/년 표시 수정 */}
-          <View className="flex-row items-baseline space-x-2">
-            <CustomText size="2xl" weight="bold" className="text-gray-900">
-              {format(currentWeekStart, "M")}
-              <CustomText size="lg" weight="medium" className="text-gray-600">
-                월
+          {/* 월/년과 완료/전체 */}
+          <View className="flex-row items-center space-x-2">
+            <CustomText size="lg" weight="bold" className="text-gray-900">
+              {format(currentWeekStart, "yyyy년 M월")}
+            </CustomText>
+            <View className="flex-row items-center px-2 py-0.5">
+              <CustomText
+                size="lg"
+                weight="bold"
+                className={
+                  completedTasks === totalTasks
+                    ? "text-green-500"
+                    : "text-blue-500"
+                }
+              >
+                {completedTasks}
               </CustomText>
-            </CustomText>
-            <CustomText size="sm" className="text-gray-400">
-              {format(currentWeekStart, "yyyy")}
-            </CustomText>
-          </View>
-
-          {/* 주간 이동 버튼 수정 */}
-          <View className="flex-row items-center bg-gray-50 rounded-full">
-            <Pressable
-              onPress={handlePrevWeek}
-              className="w-8 h-8 rounded-full items-center justify-center hover:bg-gray-100"
-            >
-              <ChevronLeft size={20} color="#4B5563" />
-            </Pressable>
-            <View className="w-[1px] h-4 bg-gray-200" />
-            <Pressable
-              onPress={handleNextWeek}
-              className="w-8 h-8 rounded-full items-center justify-center hover:bg-gray-100"
-            >
-              <ChevronRight size={20} color="#4B5563" />
-            </Pressable>
+              <CustomText size="lg" className="text-gray-400 mx-0.5">
+                /
+              </CustomText>
+              <CustomText size="lg" weight="medium" className="text-gray-500">
+                {totalTasks}
+              </CustomText>
+              {completedTasks === totalTasks ? (
+                <View className="ml-1 items-center justify-center">
+                  <Check strokeWidth={3} size={18} color="#22C55E" />
+                </View>
+              ) : (
+                <View className="w-1.5 h-1.5 rounded-full bg-blue-500 ml-1" />
+              )}
+            </View>
           </View>
         </View>
 
-        <View className="flex-row items-center space-x-3">
+        {/* 주간 이동 버튼과 오늘 버튼을 오른쪽으로 */}
+        <View className="flex-row items-center space-x-2">
           {!isCurrentWeek && (
             <Pressable
               onPress={handleGoToToday}
-              className="h-8 px-3 rounded-full flex-row items-center bg-blue-50"
+              className="h-9 px-3 mr-2 rounded-full items-center justify-center bg-gray-100"
             >
-              <Calendar size={14} color="#3B82F6" />
-              <CustomText
-                size="sm"
-                className="text-blue-600 ml-1.5 font-medium"
-              >
-                오늘
+              <CustomText size="sm" weight="bold" className="text-gray-700">
+                이번 주
               </CustomText>
             </Pressable>
           )}
-          <TaskProgress completed={completedTasks} total={totalTasks} />
+          <View className="flex-row items-center space-x-2 gap-x-2">
+            <Pressable
+              onPress={handlePrevWeek}
+              className="w-9 h-9 rounded-xl items-center justify-center bg-gray-100"
+            >
+              <ChevronLeft size={24} color="#374151" strokeWidth={2.5} />
+            </Pressable>
+            <Pressable
+              onPress={handleNextWeek}
+              className="w-9 h-9 rounded-xl items-center justify-center bg-gray-100"
+            >
+              <ChevronRight size={24} color="#374151" strokeWidth={2.5} />
+            </Pressable>
+          </View>
         </View>
       </View>
 
       {/* 요일 및 날짜 그리드 */}
-      <View>
+      <View className="mt-2">
         {/* 요일 헤더 */}
         <XStack justifyContent="space-between" mb={3}>
           {["월", "화", "수", "목", "금", "토", "일"].map((day, i) => (
             <View key={day} style={{ width: 40, alignItems: "center" }}>
               <CustomText
-                size="xs"
+                size="sm"
                 weight="medium"
                 className={
                   i === 5
                     ? "text-blue-500"
                     : i === 6
                     ? "text-red-500"
-                    : "text-gray-400"
+                    : "text-gray-600"
                 }
               >
                 {day}
