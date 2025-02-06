@@ -10,6 +10,7 @@ import Animated, {
 import { useRef, useState } from "react";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { TodoActionSheet } from "./TodoActionSheet";
+import { getColorValue } from "@/constants/Colors";
 
 interface Todo {
   id: string;
@@ -27,10 +28,18 @@ interface TodoItemProps {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function TodoItem({ todo, onToggle, onEdit, onDelete }: TodoItemProps) {
+export function TodoItem({
+  todo,
+  color,
+  onToggle,
+  onEdit,
+  onDelete,
+}: TodoItemProps) {
   const actionSheetRef = useRef<BottomSheetModal>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
+
+  const categoryColor = getColorValue(color);
 
   const handleToggle = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -68,10 +77,11 @@ export function TodoItem({ todo, onToggle, onEdit, onDelete }: TodoItemProps) {
           }),
         },
       ],
-      backgroundColor: withTiming(todo.completed ? "#3B82F6" : "transparent", {
-        duration: 150,
-      }),
-      borderColor: withTiming(todo.completed ? "#3B82F6" : "#D1D5DB", {
+      backgroundColor: withTiming(
+        todo.completed ? categoryColor : "transparent",
+        { duration: 150 }
+      ),
+      borderColor: withTiming(todo.completed ? categoryColor : "#D1D5DB", {
         duration: 150,
       }),
     };
@@ -83,17 +93,18 @@ export function TodoItem({ todo, onToggle, onEdit, onDelete }: TodoItemProps) {
         <TextInput
           value={editText}
           onChangeText={setEditText}
-          className="flex-1 border-b border-gray-200 px-1 py-2"
+          className="flex-1 border-b-2 px-1 py-2"
+          style={{
+            fontSize: 16,
+            fontFamily: "SpoqaHanSansNeo-Regular",
+            borderBottomColor: categoryColor,
+          }}
           autoFocus
           returnKeyType="done"
           onSubmitEditing={handleEditSubmit}
           onBlur={() => {
             setIsEditing(false);
             setEditText(todo.text);
-          }}
-          style={{
-            fontSize: 16,
-            fontFamily: "SpoqaHanSansNeo-Regular",
           }}
         />
       </View>

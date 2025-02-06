@@ -11,6 +11,7 @@ import {
 import { Plus, FolderPlus } from "lucide-react-native";
 import { CreateCategoryModal } from "./CreateCategoryModal";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { getColorValue } from "@/constants/Colors";
 
 interface Todo {
   id: string;
@@ -198,7 +199,14 @@ export default function TodoList() {
                   value={newTodoText}
                   onChangeText={setNewTodoText}
                   placeholder="할 일을 입력하세요"
-                  className="flex-1 border-b border-gray-200 px-1 py-2"
+                  className="flex-1 border-b-2 px-1 py-2"
+                  style={{
+                    fontSize: 16,
+                    fontFamily: "SpoqaHanSansNeo-Regular",
+                    color: "#374151",
+                    borderBottomColor: getColorValue(category.color),
+                  }}
+                  placeholderTextColor="#9CA3AF"
                   autoFocus
                   returnKeyType="done"
                   onSubmitEditing={handleAddTodoSubmit}
@@ -207,12 +215,6 @@ export default function TodoList() {
                     setNewTodoText("");
                     setActiveCategoryId(null);
                   }}
-                  style={{
-                    fontSize: 16,
-                    fontFamily: "SpoqaHanSansNeo-Regular",
-                    color: "#374151",
-                  }}
-                  placeholderTextColor="#9CA3AF"
                 />
               </View>
             ) : (
