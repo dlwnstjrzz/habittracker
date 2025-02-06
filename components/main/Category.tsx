@@ -10,6 +10,7 @@ import { TodoItem } from "./TodoItem";
 import { CreateTodoModal } from "./CreateTodoModal";
 import { EditTodoModal } from "./EditTodoModal";
 import { getColorValue } from "@/constants/Colors";
+import { EditCategoryModal } from "./EditCategoryModal";
 
 interface Todo {
   id: string;
@@ -52,6 +53,7 @@ export default function Category({
   renderAddTodo,
 }: CategoryProps) {
   const actionSheetRef = useRef<BottomSheetModal>(null);
+  const editModalRef = useRef<BottomSheetModal>(null);
 
   const handleToggleTodo = (id: string) => {
     const updatedTodos = category.todos.map((todo) =>
@@ -78,7 +80,16 @@ export default function Category({
 
   const handleEdit = () => {
     actionSheetRef.current?.dismiss();
-    // TODO: 카테고리 수정 모달 열기
+    setTimeout(() => {
+      editModalRef.current?.present();
+    }, 100);
+  };
+
+  const handleEditSubmit = (
+    id: string,
+    updates: { title: string; color: string }
+  ) => {
+    onUpdate(id, updates);
   };
 
   const handleReorder = () => {
@@ -134,6 +145,12 @@ export default function Category({
         onEdit={handleEdit}
         onReorder={handleReorder}
         onDelete={handleCategoryDelete}
+      />
+
+      <EditCategoryModal
+        ref={editModalRef}
+        category={category}
+        onSubmit={handleEditSubmit}
       />
     </View>
   );
