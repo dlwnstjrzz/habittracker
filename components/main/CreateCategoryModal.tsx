@@ -3,32 +3,44 @@ import { CustomText } from "../common/CustomText";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { forwardRef, useCallback, useState } from "react";
 import { X, Check } from "lucide-react-native";
+import { XStack, YStack } from "tamagui";
 
 interface CreateCategoryModalProps {
   onSubmit: (title: string, color: string) => void;
 }
 
 const COLORS = [
-  { id: "slate", value: "#475569" },
-  { id: "gray", value: "#4B5563" },
-  { id: "zinc", value: "#52525B" },
-  { id: "neutral", value: "#525252" },
-  { id: "stone", value: "#57534E" },
+  // Warm Colors
   { id: "red", value: "#DC2626" },
+  { id: "rose", value: "#E11D48" },
   { id: "orange", value: "#EA580C" },
   { id: "amber", value: "#D97706" },
   { id: "yellow", value: "#CA8A04" },
+  { id: "brown", value: "#92400E" },
+
+  // Nature Colors
   { id: "lime", value: "#65A30D" },
   { id: "green", value: "#16A34A" },
   { id: "emerald", value: "#059669" },
   { id: "teal", value: "#0D9488" },
   { id: "cyan", value: "#0891B2" },
   { id: "sky", value: "#0284C7" },
+
+  // Cool Colors
   { id: "blue", value: "#2563EB" },
   { id: "indigo", value: "#4F46E5" },
   { id: "violet", value: "#7C3AED" },
   { id: "purple", value: "#9333EA" },
   { id: "fuchsia", value: "#C026D3" },
+  { id: "pink", value: "#DB2777" },
+
+  // Neutral Colors
+  { id: "slate", value: "#475569" },
+  { id: "gray", value: "#4B5563" },
+  { id: "zinc", value: "#52525B" },
+  { id: "neutral", value: "#525252" },
+  { id: "stone", value: "#57534E" },
+  { id: "warmGray", value: "#4B5563" },
 ];
 
 export const CreateCategoryModal = forwardRef<
@@ -70,24 +82,19 @@ export const CreateCategoryModal = forwardRef<
         </View>
 
         {/* 입력 폼 */}
-        <View className="space-y-6">
+        <View className="space-y-6 gap-4">
           <View>
-            <CustomText
-              size="base"
-              weight="medium"
-              className="text-gray-700 mb-2"
-            >
-              카테고리 이름
-            </CustomText>
             <TextInput
-              value={title}
               onChangeText={setTitle}
-              placeholder="카테고리 이름을 입력하세요"
-              className="border-b border-gray-200 px-1 py-2"
+              placeholder="카테고리 입력"
+              className="border-b-2 px-1 py-2"
               style={{
                 fontSize: 16,
-                fontFamily: "SpoqaHanSansNeo-Regular",
+                fontFamily: "SpoqaHanSansNeo-Medium",
                 color: "#374151",
+                borderBottomColor:
+                  COLORS.find((c) => c.id === selectedColor)?.value ||
+                  "#E5E7EB",
               }}
               placeholderTextColor="#9CA3AF"
               autoFocus
@@ -102,27 +109,28 @@ export const CreateCategoryModal = forwardRef<
             >
               색상
             </CustomText>
-            <View className="flex-row flex-wrap justify-center gap-4">
-              {COLORS.map((color) => (
-                <Pressable
-                  key={color.id}
-                  onPress={() => setSelectedColor(color.id)}
-                  className="items-center justify-center"
-                  style={{ width: "16%" }}
-                >
-                  <View
-                    className="w-12 h-12 rounded-full items-center justify-center"
-                    style={{
-                      backgroundColor: color.value,
-                    }}
+            <YStack space="$4">
+              <XStack flexWrap="wrap" justifyContent="space-between" gap="$4">
+                {COLORS.map((color) => (
+                  <Pressable
+                    key={color.id}
+                    onPress={() => setSelectedColor(color.id)}
+                    className="items-center justify-center"
                   >
-                    {selectedColor === color.id && (
-                      <Check size={20} color="white" strokeWidth={3} />
-                    )}
-                  </View>
-                </Pressable>
-              ))}
-            </View>
+                    <View
+                      className="w-11 h-11 rounded-full items-center justify-center"
+                      style={{
+                        backgroundColor: color.value,
+                      }}
+                    >
+                      {selectedColor === color.id && (
+                        <Check size={20} color="white" strokeWidth={3.5} />
+                      )}
+                    </View>
+                  </Pressable>
+                ))}
+              </XStack>
+            </YStack>
           </View>
         </View>
 
