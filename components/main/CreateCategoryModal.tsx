@@ -4,44 +4,39 @@ import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { forwardRef, useCallback, useState } from "react";
 import { X, Check } from "lucide-react-native";
 import { XStack, YStack } from "tamagui";
+import { useSharedValue } from "react-native-reanimated";
+import { COLORS } from "@/constants/Colors";
 
 interface CreateCategoryModalProps {
   onSubmit: (title: string, color: string) => void;
 }
 
-const COLORS = [
-  // Warm Colors
-  { id: "red", value: "#DC2626" },
-  { id: "rose", value: "#E11D48" },
-  { id: "orange", value: "#EA580C" },
-  { id: "amber", value: "#D97706" },
-  { id: "yellow", value: "#CA8A04" },
-  { id: "brown", value: "#92400E" },
+export interface ColorItemProps {
+  color: { id: string; value: string; tailwindValue: string };
+  isSelected: boolean;
+  onSelect: () => void;
+}
 
-  // Nature Colors
-  { id: "lime", value: "#65A30D" },
-  { id: "green", value: "#16A34A" },
-  { id: "emerald", value: "#059669" },
-  { id: "teal", value: "#0D9488" },
-  { id: "cyan", value: "#0891B2" },
-  { id: "sky", value: "#0284C7" },
+const ColorItem = ({ color, isSelected, onSelect }: ColorItemProps) => {
+  const [isPressed, setIsPressed] = useState(false);
 
-  // Cool Colors
-  { id: "blue", value: "#2563EB" },
-  { id: "indigo", value: "#4F46E5" },
-  { id: "violet", value: "#7C3AED" },
-  { id: "purple", value: "#9333EA" },
-  { id: "fuchsia", value: "#C026D3" },
-  { id: "pink", value: "#DB2777" },
-
-  // Neutral Colors
-  { id: "slate", value: "#475569" },
-  { id: "gray", value: "#4B5563" },
-  { id: "zinc", value: "#52525B" },
-  { id: "neutral", value: "#525252" },
-  { id: "stone", value: "#57534E" },
-  { id: "warmGray", value: "#4B5563" },
-];
+  return (
+    <Pressable
+      onPress={onSelect}
+      onPressIn={() => setIsPressed(true)}
+      onPressOut={() => setIsPressed(false)}
+      className={`items-center justify-center ${
+        isPressed ? "scale-110" : "scale-100"
+      }`}
+    >
+      <View
+        className={`w-12 h-12 rounded-full items-center justify-center ${color.tailwindValue}`}
+      >
+        {isSelected && <Check size={20} color="white" strokeWidth={3.5} />}
+      </View>
+    </Pressable>
+  );
+};
 
 export const CreateCategoryModal = forwardRef<
   BottomSheetModal,
@@ -63,11 +58,10 @@ export const CreateCategoryModal = forwardRef<
     <BottomSheetModal
       ref={ref}
       snapPoints={["90%"]}
-      index={0}
+      // index={0}
       enablePanDownToClose
-      backgroundStyle={{ backgroundColor: "white" }}
     >
-      <BottomSheetView className="flex-1 px-4 pt-2">
+      <BottomSheetView className="flex-1 px-4 pt-2 bg-white">
         {/* 헤더 */}
         <View className="flex-row items-center justify-between mb-8">
           <CustomText size="xl" weight="bold" className="text-gray-900">
@@ -109,25 +103,15 @@ export const CreateCategoryModal = forwardRef<
             >
               색상
             </CustomText>
-            <YStack space="$4">
+            <YStack>
               <XStack flexWrap="wrap" justifyContent="space-between" gap="$4">
                 {COLORS.map((color) => (
-                  <Pressable
+                  <ColorItem
                     key={color.id}
-                    onPress={() => setSelectedColor(color.id)}
-                    className="items-center justify-center"
-                  >
-                    <View
-                      className="w-11 h-11 rounded-full items-center justify-center"
-                      style={{
-                        backgroundColor: color.value,
-                      }}
-                    >
-                      {selectedColor === color.id && (
-                        <Check size={20} color="white" strokeWidth={3.5} />
-                      )}
-                    </View>
-                  </Pressable>
+                    color={color}
+                    isSelected={selectedColor === color.id}
+                    onSelect={() => setSelectedColor(color.id)}
+                  />
                 ))}
               </XStack>
             </YStack>

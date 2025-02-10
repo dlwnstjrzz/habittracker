@@ -214,6 +214,11 @@ export default function TodoList() {
           onTodoCreate={(todo) => handleCreateTodo(category.id, todo)}
           onTodoEdit={(todoId, newText) => handleEditTodo(todoId, newText)}
           onTodoDelete={(todoId) => handleDeleteTodo(todoId)}
+          onUpdate={handleUpdateCategory}
+          onDelete={handleDeleteCategory}
+          onReorder={() => {
+            reorderModalRef.current?.present();
+          }}
           renderAddTodo={() =>
             isAddingTodo && activeCategoryId === category.id ? (
               <View className="px-3 py-3">

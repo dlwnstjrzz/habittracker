@@ -4,13 +4,8 @@ import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { forwardRef, useCallback, useState, useEffect, useRef } from "react";
 import { X, Check } from "lucide-react-native";
 import { XStack, YStack } from "tamagui";
-import { COLORS, getColorValue } from "@/constants/Colors";
-import {
-  useSharedValue,
-  withSpring,
-  useAnimatedStyle,
-} from "react-native-reanimated";
-import Animated from "react-native-reanimated";
+import { getColorValue } from "@/constants/Colors";
+import { COLORS } from "@/constants/Colors";
 
 interface EditCategoryModalProps {
   category: {
@@ -25,42 +20,30 @@ interface ColorItemProps {
   color: {
     id: string;
     value: string;
+    tailwindValue: string;
   };
   isSelected: boolean;
   onSelect: () => void;
 }
 
 const ColorItem = ({ color, isSelected, onSelect }: ColorItemProps) => {
-  const scale = useSharedValue(1);
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = useCallback(() => {
-    scale.value = withSpring(1.1);
-  }, []);
-
-  const handlePressOut = useCallback(() => {
-    scale.value = withSpring(1);
-  }, []);
+  const [isPressed, setIsPressed] = useState(false);
 
   return (
-    <Animated.View style={animatedStyle}>
-      <Pressable
-        onPress={onSelect}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
+    <Pressable
+      onPress={onSelect}
+      onPressIn={() => setIsPressed(true)}
+      onPressOut={() => setIsPressed(false)}
+      className={`items-center justify-center ${
+        isPressed ? "scale-110" : "scale-100"
+      }`}
+    >
+      <View
+        className={`w-12 h-12 rounded-full items-center justify-center ${color.tailwindValue}`}
       >
-        <View
-          className="w-12 h-12 rounded-full items-center justify-center"
-          style={{
-            backgroundColor: color.value,
-          }}
-        >
-          {isSelected && <Check size={20} color="white" strokeWidth={3.5} />}
-        </View>
-      </Pressable>
-    </Animated.View>
+        {isSelected && <Check size={20} color="white" strokeWidth={3.5} />}
+      </View>
+    </Pressable>
   );
 };
 
