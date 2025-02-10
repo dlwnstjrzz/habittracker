@@ -4,14 +4,19 @@ export interface Todo {
   id: string;
   text: string;
   completed: boolean;
+  date: string;
   categoryId: string;
-  createdAt: string;
 }
 
 export interface Category {
   id: string;
   title: string;
-  todos: Todo[];
+  color: string;
+}
+
+export interface StorageData {
+  categories: Category[];
+  todos: { [date: string]: Todo[] };
 }
 
 const STORAGE_KEY = "todos_v1";
@@ -21,49 +26,53 @@ export const initialCategories: Category[] = [
   {
     id: "startup",
     title: "창업",
-    todos: [],
+    color: "blue",
   },
   {
     id: "exercise",
     title: "운동",
-    todos: [],
+    color: "green",
   },
   {
     id: "growth",
     title: "자기계발",
-    todos: [],
+    color: "purple",
   },
 ];
 
-export async function getCategories(): Promise<Category[]> {
+// 초기 데이터
+const initialData: StorageData = {
+  categories: initialCategories,
+  todos: {},
+};
+
+export async function getCategories(): Promise<StorageData | null> {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEY);
     if (!data) {
-      // 저장된 데이터가 없으면 초기 카테고리 반환
-      await saveCategories(initialCategories);
-      return initialCategories;
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(initialData));
+      return initialData;
     }
     return JSON.parse(data);
   } catch (error) {
-    console.error("Error loading categories:", error);
-    return initialCategories; // 에러 시에도 초기 카테고리 반환
+    console.error("Error getting categories:", error);
+    return null;
   }
 }
 
-export async function saveCategories(categories: Category[]): Promise<void> {
+export async function saveCategories(data: StorageData): Promise<void> {
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(categories));
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
     console.error("Error saving categories:", error);
   }
 }
 
-// 모든 키-값 쌍 확인
 export async function logAllStorage() {
   try {
     const keys = await AsyncStorage.getAllKeys();
     const items = await AsyncStorage.multiGet(keys);
-    console.log("==== AsyncStorage Contents ====");
+    console.log("==== All Storage ====");
     items.forEach(([key, value]) => {
       console.log(`${key}: ${value}`);
     });
@@ -72,12 +81,11 @@ export async function logAllStorage() {
   }
 }
 
-// 특정 키의 값만 확인
 export async function logTodos() {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEY);
     console.log("==== Todos Data ====");
-    console.log(JSON.parse(data || "[]"));
+    console.log(JSON.parse(data || "null"));
   } catch (error) {
     console.error("Error logging todos:", error);
   }

@@ -16,7 +16,7 @@ import { CustomText } from "@/components/common/CustomText";
 import { Character3D } from "@/components/common/Character3D";
 import TodoList from "@/components/main/TodoList";
 import { clearStorage } from "@/utils/storage";
-import { WeeklyDatePicker } from "@/components/main/WeeklyDatePicker";
+import WeeklyDatePicker from "@/components/main/WeeklyDatePicker";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 // @ts-ignore
 import characterModel from "../../assets/models/animals/Rabby.fbx";
@@ -61,14 +61,7 @@ function MainScreen() {
         </View>
 
         {/* Calendar Strip */}
-        {selectedDate && (
-          <WeeklyDatePicker
-            selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
-            completedTasks={3}
-            totalTasks={5}
-          />
-        )}
+        {selectedDate && <WeeklyDatePicker />}
 
         {/* Todo Lists */}
         <TodoList />

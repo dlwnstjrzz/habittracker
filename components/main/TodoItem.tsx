@@ -12,6 +12,8 @@ interface TodoItemProps {
     id: string;
     text: string;
     completed: boolean;
+    date: string;
+    categoryId: string;
   };
   color: string;
   onToggle: () => void;

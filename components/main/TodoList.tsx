@@ -13,26 +13,26 @@ import { CreateCategoryModal } from "./CreateCategoryModal";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { getColorValue } from "@/constants/Colors";
 import { ReorderCategoryModal } from "./ReorderCategoryModal";
+import { useSelectedDateStore } from "@/store/useSelectedDateStore";
 
 interface Todo {
   id: string;
   text: string;
   completed: boolean;
   date: string;
+  categoryId: string;
 }
 
 interface Category {
   id: string;
   title: string;
   color: string;
-  todos: { [date: string]: Todo[] };
 }
 
 export default function TodoList() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [todos, setTodos] = useState<{ [date: string]: Todo[] }>({});
+  const { selectedDate } = useSelectedDateStore();
   const [isAddingTodo, setIsAddingTodo] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
@@ -41,14 +41,26 @@ export default function TodoList() {
 
   // 초기 데이터 로드
   useEffect(() => {
-    loadCategories();
+    loadData();
     logAllStorage();
   }, []);
 
-  const loadCategories = async () => {
-    const savedCategories = await getCategories();
-    setCategories(savedCategories);
+  const loadData = async () => {
+    const data = await getCategories();
+    if (data) {
+      setCategories(data.categories);
+      setTodos(data.todos);
+    }
   };
+
+  // 선택된 날짜의 todos를 카테고리별로 그룹화
+  const getTodosByCategory = useCallback(
+    (categoryId: string) => {
+      const todosForDate = todos[selectedDate] || [];
+      return todosForDate.filter((todo) => todo.categoryId === categoryId);
+    },
+    [todos, selectedDate]
+  );
 
   const handleCreateTodo = async (categoryId: string, newTodo: Todo) => {
     const updatedCategories = categories.map((category) =>
@@ -64,70 +76,41 @@ export default function TodoList() {
     );
 
     setCategories(updatedCategories);
-    await saveCategories(updatedCategories);
+    await saveCategories({ categories: updatedCategories, todos });
   };
 
-  const handleTodoToggle = async (categoryId: string, todoId: string) => {
-    const updatedCategories = categories.map((category) =>
-      category.id === categoryId
-        ? {
-            ...category,
-            todos: {
-              ...category.todos,
-              [selectedDate]: category.todos[selectedDate].map((todo) =>
-                todo.id === todoId
-                  ? { ...todo, completed: !todo.completed }
-                  : todo
-              ),
-            },
-          }
-        : category
-    );
+  const handleTodoToggle = async (todoId: string) => {
+    const updatedTodos = {
+      ...todos,
+      [selectedDate]: todos[selectedDate].map((todo) =>
+        todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
+      ),
+    };
 
-    setCategories(updatedCategories);
-    await saveCategories(updatedCategories);
+    setTodos(updatedTodos);
+    await saveCategories({ categories, todos: updatedTodos });
   };
 
-  const handleEditTodo = async (
-    categoryId: string,
-    todoId: string,
-    newText: string
-  ) => {
-    const updatedCategories = categories.map((category) =>
-      category.id === categoryId
-        ? {
-            ...category,
-            todos: {
-              ...category.todos,
-              [selectedDate]: category.todos[selectedDate].map((todo) =>
-                todo.id === todoId ? { ...todo, text: newText } : todo
-              ),
-            },
-          }
-        : category
-    );
+  const handleEditTodo = async (todoId: string, newText: string) => {
+    const updatedTodos = {
+      ...todos,
+      [selectedDate]: todos[selectedDate].map((todo) =>
+        todo.id === todoId ? { ...todo, text: newText } : todo
+      ),
+    };
 
-    setCategories(updatedCategories);
-    await saveCategories(updatedCategories);
+    setTodos(updatedTodos);
+    await saveCategories({ categories, todos: updatedTodos });
   };
 
-  const handleDeleteTodo = async (categoryId: string, todoId: string) => {
-    const updatedCategories = categories.map((category) =>
-      category.id === categoryId
-        ? {
-            ...category,
-            todos: {
-              ...category.todos,
-              [selectedDate]: category.todos[selectedDate].filter(
-                (todo) => todo.id !== todoId
-              ),
-            },
-          }
-        : category
-    );
+  const handleDeleteTodo = async (todoId: string) => {
+    const updatedTodos = {
+      ...todos,
+      [selectedDate]: todos[selectedDate].filter((todo) => todo.id !== todoId),
+    };
 
-    setCategories(updatedCategories);
-    await saveCategories(updatedCategories);
+    setTodos(updatedTodos);
+    await saveCategories({ categories, todos: updatedTodos });
   };
 
   const handleCreateCategory = async (title: string, color: string) => {
@@ -135,12 +118,11 @@ export default function TodoList() {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title,
       color,
-      todos: {},
     };
 
     const updatedCategories = [...categories, newCategory];
     setCategories(updatedCategories);
-    await saveCategories(updatedCategories);
+    await saveCategories({ categories: updatedCategories, todos });
   };
 
   const handleAddTodoPress = (categoryId: string) => {
@@ -150,30 +132,21 @@ export default function TodoList() {
 
   const handleAddTodoSubmit = () => {
     if (newTodoText.trim() && activeCategoryId) {
-      const updatedCategories = categories.map((category) => {
-        if (category.id === activeCategoryId) {
-          const todosForDate = category.todos[selectedDate] || [];
-          return {
-            ...category,
-            todos: {
-              ...category.todos,
-              [selectedDate]: [
-                ...todosForDate,
-                {
-                  id: Date.now().toString(),
-                  text: newTodoText.trim(),
-                  completed: false,
-                  date: selectedDate,
-                },
-              ],
-            },
-          };
-        }
-        return category;
-      });
+      const newTodo: Todo = {
+        id: Date.now().toString(),
+        text: newTodoText.trim(),
+        completed: false,
+        date: selectedDate,
+        categoryId: activeCategoryId,
+      };
 
-      setCategories(updatedCategories);
-      saveCategories(updatedCategories);
+      const updatedTodos = {
+        ...todos,
+        [selectedDate]: [...(todos[selectedDate] || []), newTodo],
+      };
+
+      setTodos(updatedTodos);
+      saveCategories({ categories, todos: updatedTodos });
       setNewTodoText("");
       setIsAddingTodo(false);
       setActiveCategoryId(null);
@@ -188,15 +161,28 @@ export default function TodoList() {
       category.id === categoryId ? { ...category, ...updates } : category
     );
     setCategories(updatedCategories);
-    await saveCategories(updatedCategories);
+    await saveCategories({ categories: updatedCategories, todos });
   };
 
   const handleDeleteCategory = async (categoryId: string) => {
     const updatedCategories = categories.filter(
       (category) => category.id !== categoryId
     );
+
+    // 해당 카테고리의 todos도 모두 삭제
+    const updatedTodos = { ...todos };
+    Object.keys(updatedTodos).forEach((date) => {
+      updatedTodos[date] = updatedTodos[date].filter(
+        (todo) => todo.categoryId !== categoryId
+      );
+    });
+
     setCategories(updatedCategories);
-    await saveCategories(updatedCategories);
+    setTodos(updatedTodos);
+    await saveCategories({
+      categories: updatedCategories,
+      todos: updatedTodos,
+    });
   };
 
   const handleAddCategoryPress = () => {
@@ -208,31 +194,26 @@ export default function TodoList() {
   const handleReorderCategories = useCallback(
     (reorderedCategories: Category[]) => {
       setCategories(reorderedCategories);
-      saveCategories(reorderedCategories);
+      saveCategories({ categories: reorderedCategories, todos });
     },
     []
   );
 
-  const handleDateChange = (date: string) => {
+  const handleDateSelect = (date: string) => {
     setSelectedDate(date);
   };
-  console.log(11, categories);
+  console.log("categories", categories);
   return (
     <View className="flex-1 px-4">
       {categories.map((category) => (
         <Category
           key={category.id}
           category={category}
-          selectedDate={selectedDate}
-          onUpdate={handleUpdateCategory}
-          onDelete={handleDeleteCategory}
-          onReorder={() => reorderModalRef.current?.present()}
-          onTodoToggle={(todoId) => handleTodoToggle(category.id, todoId)}
-          onTodoCreate={handleCreateTodo}
-          onTodoEdit={(todoId, newText) =>
-            handleEditTodo(category.id, todoId, newText)
-          }
-          onTodoDelete={(todoId) => handleDeleteTodo(category.id, todoId)}
+          todos={getTodosByCategory(category.id)}
+          onTodoToggle={handleTodoToggle}
+          onTodoCreate={(todo) => handleCreateTodo(category.id, todo)}
+          onTodoEdit={(todoId, newText) => handleEditTodo(todoId, newText)}
+          onTodoDelete={(todoId) => handleDeleteTodo(todoId)}
           renderAddTodo={() =>
             isAddingTodo && activeCategoryId === category.id ? (
               <View className="px-3 py-3">

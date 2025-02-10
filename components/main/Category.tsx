@@ -14,18 +14,23 @@ interface Todo {
   id: string;
   text: string;
   completed: boolean;
+  date: string;
+  categoryId: string;
 }
 
 interface Category {
   id: string;
   title: string;
   color: string;
-  todos: { [date: string]: Todo[] };
 }
 
 interface CategoryProps {
   category: Category;
-  selectedDate: string;
+  todos: Todo[];
+  onTodoToggle: (todoId: string) => void;
+  onTodoCreate: (todo: Todo) => void;
+  onTodoEdit: (todoId: string, newText: string) => void;
+  onTodoDelete: (todoId: string) => void;
   onUpdate: (id: string, updates: Partial<Category>) => void;
   onDelete: (id: string) => void;
   onReorder: () => void;
@@ -34,7 +39,11 @@ interface CategoryProps {
 
 export default function Category({
   category,
-  selectedDate,
+  todos,
+  onTodoToggle,
+  onTodoCreate,
+  onTodoEdit,
+  onTodoDelete,
   onUpdate,
   onDelete,
   onReorder,
@@ -42,49 +51,6 @@ export default function Category({
 }: CategoryProps) {
   const actionSheetRef = useRef<BottomSheetModal>(null);
   const editModalRef = useRef<BottomSheetModal>(null);
-
-  const [localTodos, setLocalTodos] = useState(
-    category.todos[selectedDate] || []
-  );
-
-  useEffect(() => {
-    setLocalTodos(category.todos[selectedDate] || []);
-  }, [category.todos, selectedDate]);
-
-  const handleToggleTodo = (id: string) => {
-    const updatedTodos = localTodos.map((todo) =>
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    );
-
-    onUpdate(category.id, {
-      todos: {
-        ...category.todos,
-        [selectedDate]: updatedTodos,
-      },
-    });
-  };
-
-  const handleDeleteTodo = (id: string) => {
-    const updatedTodos = localTodos.filter((todo) => todo.id !== id);
-    onUpdate(category.id, {
-      todos: {
-        ...category.todos,
-        [selectedDate]: updatedTodos,
-      },
-    });
-  };
-
-  const handleEditTodo = (id: string, newText: string) => {
-    const updatedTodos = localTodos.map((todo) =>
-      todo.id === id ? { ...todo, text: newText } : todo
-    );
-    onUpdate(category.id, {
-      todos: {
-        ...category.todos,
-        [selectedDate]: updatedTodos,
-      },
-    });
-  };
 
   const handleEdit = () => {
     actionSheetRef.current?.dismiss();
@@ -135,18 +101,16 @@ export default function Category({
 
       {/* 할일 목록 */}
       <View className="space-y-1 px-1">
-        {localTodos.map((todo) => (
+        {todos.map((todo) => (
           <TodoItem
             key={todo.id}
             todo={todo}
             color={category.color}
-            onToggle={() => handleToggleTodo(todo.id)}
-            onEdit={handleEditTodo}
-            onDelete={handleDeleteTodo}
+            onToggle={() => onTodoToggle(todo.id)}
+            onEdit={onTodoEdit}
+            onDelete={onTodoDelete}
           />
         ))}
-
-        {/* 할일 추가 버튼 */}
         {renderAddTodo()}
       </View>
 

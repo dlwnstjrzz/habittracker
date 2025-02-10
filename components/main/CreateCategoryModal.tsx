@@ -53,9 +53,9 @@ export const CreateCategoryModal = forwardRef<
   const handleSubmit = useCallback(() => {
     if (title.trim()) {
       onSubmit(title.trim(), selectedColor);
-      setTitle("");
-      setSelectedColor(COLORS[15].id);
       (ref as any).current?.dismiss();
+      setTitle("");
+      setSelectedColor(COLORS[0].id);
     }
   }, [title, selectedColor, onSubmit]);
 

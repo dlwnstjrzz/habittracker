@@ -21,6 +21,7 @@ import {
 } from "lucide-react-native";
 import { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSelectedDateStore } from "@/store/useSelectedDateStore";
 
 interface DateButtonProps {
   selected: boolean;
@@ -30,10 +31,8 @@ interface DateButtonProps {
 }
 
 interface WeeklyDatePickerProps {
-  selectedDate: Date;
-  onSelectDate: (date: Date) => void;
-  completedTasks?: number;
-  totalTasks?: number;
+  selectedDate: string; // YYYY-MM-DD 형식
+  onDateSelect: (date: string) => void;
 }
 
 function DateButton({
@@ -73,15 +72,17 @@ const TaskProgress = ({
   </View>
 );
 
-export function WeeklyDatePicker({
-  selectedDate,
-  onSelectDate,
-  completedTasks = 0,
-  totalTasks = 0,
-}: WeeklyDatePickerProps) {
+export default function WeeklyDatePicker() {
+  const { selectedDate, setSelectedDate } = useSelectedDateStore();
+
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date);
+    console.log(1111, selectedDate);
+  };
+
   // 현재 보고 있는 주의 시작일을 상태로 관리
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
-    startOfWeek(selectedDate, { weekStartsOn: 1 })
+    startOfWeek(new Date(selectedDate), { weekStartsOn: 1 })
   );
 
   // 현재 보고 있는 주가 이번 주인지 확인
@@ -103,11 +104,11 @@ export function WeeklyDatePicker({
   const handleGoToToday = () => {
     const today = new Date();
     setCurrentWeekStart(startOfWeek(today, { weekStartsOn: 1 }));
-    onSelectDate(today);
+    handleDateSelect(format(today, "yyyy-MM-dd"));
   };
 
-  const progress = totalTasks > 0 ? completedTasks / totalTasks : 0;
-  const hasStreak = completedTasks >= 3; // 예시: 3일 이상 연속 달성 시 스트릭
+  const progress = 0; // Assuming totalTasks is 0, so progress is 0
+  const hasStreak = false; // Assuming hasStreak is false
 
   return (
     <View className="px-4 py-3">
@@ -122,21 +123,17 @@ export function WeeklyDatePicker({
               <CustomText
                 size="lg"
                 weight="bold"
-                className={
-                  completedTasks === totalTasks
-                    ? "text-green-500"
-                    : "text-blue-500"
-                }
+                className={progress === 1 ? "text-green-500" : "text-blue-500"}
               >
-                {completedTasks}
+                {progress === 1 ? "Completed" : "In Progress"}
               </CustomText>
               <CustomText size="lg" className="text-gray-400 mx-0.5">
                 /
               </CustomText>
               <CustomText size="lg" weight="medium" className="text-gray-500">
-                {totalTasks}
+                100%
               </CustomText>
-              {completedTasks === totalTasks ? (
+              {progress === 1 ? (
                 <View className="ml-1 items-center justify-center">
                   <Check strokeWidth={3} size={18} color="#22C55E" />
                 </View>
@@ -204,15 +201,17 @@ export function WeeklyDatePicker({
           {[...Array(7)].map((_, i) => {
             const date = addDays(currentWeekStart, i);
             const dayNumber = format(date, "d");
-            const isSelected =
-              format(date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd");
+            const isSelected = format(date, "yyyy-MM-dd") === selectedDate;
             const isToday =
               format(date, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
             const isSaturday = i === 5;
             const isSunday = i === 6;
 
             return (
-              <Pressable key={i} onPress={() => onSelectDate(date)}>
+              <Pressable
+                key={i}
+                onPress={() => handleDateSelect(format(date, "yyyy-MM-dd"))}
+              >
                 <DateButton
                   selected={isSelected}
                   isToday={isToday && !isSelected}
