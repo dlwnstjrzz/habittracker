@@ -2,13 +2,11 @@ import "react-native-get-random-values";
 import { nanoid } from "nanoid/non-secure";
 import { View, Pressable, StyleSheet } from "react-native";
 import { CustomText } from "../common/CustomText";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Plus, Lock, MoreVertical, MoreHorizontal } from "lucide-react-native";
 import { CategoryActionSheet } from "./CategoryActionSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { TodoItem } from "./TodoItem";
-import { CreateTodoModal } from "./CreateTodoModal";
-import { EditTodoModal } from "./EditTodoModal";
 import { getColorValue } from "@/constants/Colors";
 import { EditCategoryModal } from "./EditCategoryModal";
 
@@ -22,60 +20,70 @@ interface Category {
   id: string;
   title: string;
   color: string;
-  todos: Todo[];
+  todos: { [date: string]: Todo[] };
 }
 
 interface CategoryProps {
-  category: {
-    id: string;
-    title: string;
-    color: string;
-    todos: Todo[];
-  };
+  category: Category;
+  selectedDate: string;
   onUpdate: (id: string, updates: Partial<Category>) => void;
   onDelete: (id: string) => void;
+  onReorder: () => void;
   renderAddTodo: () => React.ReactNode;
 }
 
-// Tailwind 대신 스타일 객체 사용
-const styles = StyleSheet.create({
-  categoryTitle: {
-    fontSize: 16,
-    fontFamily: "SpoqaHanSansNeo-Bold",
-    letterSpacing: -0.5,
-  },
-});
-
 export default function Category({
   category,
+  selectedDate,
   onUpdate,
   onDelete,
+  onReorder,
   renderAddTodo,
 }: CategoryProps) {
   const actionSheetRef = useRef<BottomSheetModal>(null);
   const editModalRef = useRef<BottomSheetModal>(null);
 
+  const [localTodos, setLocalTodos] = useState(
+    category.todos[selectedDate] || []
+  );
+
+  useEffect(() => {
+    setLocalTodos(category.todos[selectedDate] || []);
+  }, [category.todos, selectedDate]);
+
   const handleToggleTodo = (id: string) => {
-    const updatedTodos = category.todos.map((todo) =>
+    const updatedTodos = localTodos.map((todo) =>
       todo.id === id ? { ...todo, completed: !todo.completed } : todo
     );
-    onUpdate(category.id, { todos: updatedTodos });
+
+    onUpdate(category.id, {
+      todos: {
+        ...category.todos,
+        [selectedDate]: updatedTodos,
+      },
+    });
   };
 
   const handleDeleteTodo = (id: string) => {
-    const updatedTodos = category.todos.filter((todo) => todo.id !== id);
-    onUpdate(category.id, { todos: updatedTodos });
+    const updatedTodos = localTodos.filter((todo) => todo.id !== id);
+    onUpdate(category.id, {
+      todos: {
+        ...category.todos,
+        [selectedDate]: updatedTodos,
+      },
+    });
   };
 
   const handleEditTodo = (id: string, newText: string) => {
-    const updatedTodos = category.todos.map((todo) =>
+    const updatedTodos = localTodos.map((todo) =>
       todo.id === id ? { ...todo, text: newText } : todo
     );
-    onUpdate(category.id, { todos: updatedTodos });
-  };
-
-  const handleMorePress = () => {
-    actionSheetRef.current?.present();
+    onUpdate(category.id, {
+      todos: {
+        ...category.todos,
+        [selectedDate]: updatedTodos,
+      },
+    });
   };
 
   const handleEdit = () => {
@@ -94,7 +102,9 @@ export default function Category({
 
   const handleReorder = () => {
     actionSheetRef.current?.dismiss();
-    // TODO: 순서 변경 모드 진입
+    setTimeout(() => {
+      onReorder();
+    }, 100);
   };
 
   const handleCategoryDelete = () => {
@@ -125,7 +135,7 @@ export default function Category({
 
       {/* 할일 목록 */}
       <View className="space-y-1 px-1">
-        {category.todos.map((todo) => (
+        {localTodos.map((todo) => (
           <TodoItem
             key={todo.id}
             todo={todo}

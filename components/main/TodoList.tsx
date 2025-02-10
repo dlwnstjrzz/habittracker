@@ -1,7 +1,7 @@
 import { View, Pressable, TextInput } from "react-native";
 import { CustomText } from "@/components/common/CustomText";
 import Category from "./Category";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   getCategories,
   saveCategories,
@@ -12,25 +12,32 @@ import { Plus, FolderPlus } from "lucide-react-native";
 import { CreateCategoryModal } from "./CreateCategoryModal";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { getColorValue } from "@/constants/Colors";
+import { ReorderCategoryModal } from "./ReorderCategoryModal";
 
 interface Todo {
   id: string;
   text: string;
   completed: boolean;
+  date: string;
 }
 
-interface CategoryType {
+interface Category {
   id: string;
   title: string;
-  todos: Todo[];
+  color: string;
+  todos: { [date: string]: Todo[] };
 }
 
 export default function TodoList() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [isAddingTodo, setIsAddingTodo] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const createCategoryRef = useRef<BottomSheetModal>(null);
+  const reorderModalRef = useRef<BottomSheetModal>(null);
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -46,7 +53,13 @@ export default function TodoList() {
   const handleCreateTodo = async (categoryId: string, newTodo: Todo) => {
     const updatedCategories = categories.map((category) =>
       category.id === categoryId
-        ? { ...category, todos: [...category.todos, newTodo] }
+        ? {
+            ...category,
+            todos: {
+              ...category.todos,
+              [selectedDate]: [...category.todos[selectedDate], newTodo],
+            },
+          }
         : category
     );
 
@@ -59,11 +72,14 @@ export default function TodoList() {
       category.id === categoryId
         ? {
             ...category,
-            todos: category.todos.map((todo) =>
-              todo.id === todoId
-                ? { ...todo, completed: !todo.completed }
-                : todo
-            ),
+            todos: {
+              ...category.todos,
+              [selectedDate]: category.todos[selectedDate].map((todo) =>
+                todo.id === todoId
+                  ? { ...todo, completed: !todo.completed }
+                  : todo
+              ),
+            },
           }
         : category
     );
@@ -81,9 +97,12 @@ export default function TodoList() {
       category.id === categoryId
         ? {
             ...category,
-            todos: category.todos.map((todo) =>
-              todo.id === todoId ? { ...todo, text: newText } : todo
-            ),
+            todos: {
+              ...category.todos,
+              [selectedDate]: category.todos[selectedDate].map((todo) =>
+                todo.id === todoId ? { ...todo, text: newText } : todo
+              ),
+            },
           }
         : category
     );
@@ -97,7 +116,12 @@ export default function TodoList() {
       category.id === categoryId
         ? {
             ...category,
-            todos: category.todos.filter((todo) => todo.id !== todoId),
+            todos: {
+              ...category.todos,
+              [selectedDate]: category.todos[selectedDate].filter(
+                (todo) => todo.id !== todoId
+              ),
+            },
           }
         : category
     );
@@ -111,7 +135,7 @@ export default function TodoList() {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title,
       color,
-      todos: [],
+      todos: {},
     };
 
     const updatedCategories = [...categories, newCategory];
@@ -128,18 +152,21 @@ export default function TodoList() {
     if (newTodoText.trim() && activeCategoryId) {
       const updatedCategories = categories.map((category) => {
         if (category.id === activeCategoryId) {
+          const todosForDate = category.todos[selectedDate] || [];
           return {
             ...category,
-            todos: [
+            todos: {
               ...category.todos,
-              {
-                id: Date.now().toString(),
-                text: newTodoText.trim(),
-                completed: false,
-                categoryId: activeCategoryId,
-                createdAt: new Date().toISOString(),
-              },
-            ],
+              [selectedDate]: [
+                ...todosForDate,
+                {
+                  id: Date.now().toString(),
+                  text: newTodoText.trim(),
+                  completed: false,
+                  date: selectedDate,
+                },
+              ],
+            },
           };
         }
         return category;
@@ -178,14 +205,28 @@ export default function TodoList() {
     }, 100);
   };
 
+  const handleReorderCategories = useCallback(
+    (reorderedCategories: Category[]) => {
+      setCategories(reorderedCategories);
+      saveCategories(reorderedCategories);
+    },
+    []
+  );
+
+  const handleDateChange = (date: string) => {
+    setSelectedDate(date);
+  };
+  console.log(11, categories);
   return (
     <View className="flex-1 px-4">
       {categories.map((category) => (
         <Category
           key={category.id}
           category={category}
+          selectedDate={selectedDate}
           onUpdate={handleUpdateCategory}
           onDelete={handleDeleteCategory}
+          onReorder={() => reorderModalRef.current?.present()}
           onTodoToggle={(todoId) => handleTodoToggle(category.id, todoId)}
           onTodoCreate={handleCreateTodo}
           onTodoEdit={(todoId, newText) =>
@@ -251,6 +292,12 @@ export default function TodoList() {
       <CreateCategoryModal
         ref={createCategoryRef}
         onSubmit={handleCreateCategory}
+      />
+
+      <ReorderCategoryModal
+        ref={reorderModalRef}
+        categories={categories}
+        onReorder={handleReorderCategories}
       />
     </View>
   );

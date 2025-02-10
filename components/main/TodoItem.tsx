@@ -2,31 +2,22 @@ import { View, Pressable, TextInput } from "react-native";
 import { CustomText } from "../common/CustomText";
 import * as Haptics from "expo-haptics";
 import { Check, MoreHorizontal } from "lucide-react-native";
-import Animated, {
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { TodoActionSheet } from "./TodoActionSheet";
 import { getColorValue } from "@/constants/Colors";
 
-interface Todo {
-  id: string;
-  text: string;
-  completed: boolean;
-}
-
 interface TodoItemProps {
-  todo: Todo;
+  todo: {
+    id: string;
+    text: string;
+    completed: boolean;
+  };
   color: string;
   onToggle: () => void;
   onEdit: (id: string, newText: string) => void;
   onDelete: (id: string) => void;
 }
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function TodoItem({
   todo,
@@ -38,13 +29,22 @@ export function TodoItem({
   const actionSheetRef = useRef<BottomSheetModal>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
+  const [isCompleted, setIsCompleted] = useState(todo.completed);
+  const [localText, setLocalText] = useState(todo.text);
+  const [isDeleted, setIsDeleted] = useState(false);
 
   const categoryColor = getColorValue(color);
 
   const handleToggle = async () => {
+    setIsCompleted(!isCompleted);
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onToggle();
   };
+
+  useEffect(() => {
+    setIsCompleted(todo.completed);
+    setLocalText(todo.text);
+  }, [todo.completed, todo.text]);
 
   const handleMorePress = () => {
     actionSheetRef.current?.present();
@@ -56,36 +56,23 @@ export function TodoItem({
   };
 
   const handleEditSubmit = () => {
-    if (editText.trim() && editText !== todo.text) {
+    if (editText.trim() && editText !== localText) {
+      setLocalText(editText.trim());
+      setIsEditing(false);
       onEdit(todo.id, editText.trim());
+    } else {
+      setIsEditing(false);
+      setEditText(localText);
     }
-    setIsEditing(false);
   };
 
   const handleDeletePress = () => {
     actionSheetRef.current?.dismiss();
+    setIsDeleted(true);
     onDelete(todo.id);
   };
 
-  const checkboxAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          scale: withSpring(todo.completed ? 1 : 0.9, {
-            mass: 0.6,
-            damping: 12,
-          }),
-        },
-      ],
-      backgroundColor: withTiming(
-        todo.completed ? categoryColor : "transparent",
-        { duration: 150 }
-      ),
-      borderColor: withTiming(todo.completed ? categoryColor : "#D1D5DB", {
-        duration: 150,
-      }),
-    };
-  });
+  if (isDeleted) return null;
 
   if (isEditing) {
     return (
@@ -104,7 +91,7 @@ export function TodoItem({
           onSubmitEditing={handleEditSubmit}
           onBlur={() => {
             setIsEditing(false);
-            setEditText(todo.text);
+            setEditText(localText);
           }}
         />
       </View>
@@ -117,21 +104,23 @@ export function TodoItem({
         className="flex-row items-center flex-1"
         onPress={handleToggle}
       >
-        <AnimatedPressable
-          onPress={handleToggle}
+        <View
           className="w-6 h-6 rounded-md mr-3 border-2 items-center justify-center"
-          style={checkboxAnimatedStyle}
+          style={{
+            backgroundColor: isCompleted ? categoryColor : "transparent",
+            borderColor: isCompleted ? categoryColor : "#D1D5DB",
+          }}
         >
-          {todo.completed && <Check size={16} color="white" strokeWidth={4} />}
-        </AnimatedPressable>
+          {isCompleted && <Check size={16} color="white" strokeWidth={4} />}
+        </View>
         <CustomText
           size="base"
           weight="medium"
           className={`${
-            todo.completed ? "text-gray-400 line-through" : "text-gray-700"
+            isCompleted ? "text-gray-400 line-through" : "text-gray-700"
           }`}
         >
-          {todo.text}
+          {localText}
         </CustomText>
       </Pressable>
       <Pressable

@@ -17,7 +17,6 @@ import { Platform, LogBox } from "react-native";
 import { GLView } from "expo-gl";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 const config = createTamagui(defaultConfig);
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
