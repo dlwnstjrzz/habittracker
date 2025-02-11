@@ -19,7 +19,7 @@ export interface ColorItemProps {
 
 const ColorItem = ({ color, isSelected, onSelect }: ColorItemProps) => {
   const [isPressed, setIsPressed] = useState(false);
-
+  const backgroundColor = color.value;
   return (
     <Pressable
       onPress={onSelect}
@@ -30,7 +30,8 @@ const ColorItem = ({ color, isSelected, onSelect }: ColorItemProps) => {
       }`}
     >
       <View
-        className={`w-12 h-12 rounded-full items-center justify-center ${color.tailwindValue}`}
+        className={`w-12 h-12 rounded-full items-center justify-center`}
+        style={{ backgroundColor }}
       >
         {isSelected && <Check size={20} color="white" strokeWidth={3.5} />}
       </View>

@@ -1,6 +1,13 @@
 import { View } from "react-native";
 import { CustomText } from "../common/CustomText";
-import { COLORS } from "@/constants/Colors";
+import { getCategories } from "@/utils/storage";
+import { useEffect, useState } from "react";
+
+interface Category {
+  id: string;
+  title: string;
+  color: string;
+}
 
 interface HeatmapProps {
   data: {
@@ -125,20 +132,32 @@ export function CategoryHeatmap({
   startDate,
   endDate,
 }: HeatmapProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
   const monthDates = getMonthDates();
-  const data = MOCK_DATA;
+  const data = MOCK_DATA; // 나중에 propData로 변경
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    const result = await getCategories();
+    if (result) {
+      setCategories(result.categories);
+    }
+  };
 
   return (
     <View className="space-y-6">
-      {COLORS.map((category) => {
+      {categories.map((category) => {
         const categoryData = data.filter((d) => d.categoryId === category.id);
-        const categoryColor = category.value; // hex color value 사용
+        const categoryColor = category.color;
 
         return (
           <View key={category.id} className="bg-white rounded-xl p-4">
             <View className="flex-row items-center justify-between mb-4">
               <CustomText size="base" weight="bold" className="text-gray-900">
-                {getCategoryName(category.id)}
+                {category.title}
               </CustomText>
               {/* 범례 */}
               <View className="flex-row items-center space-x-1">
