@@ -3,7 +3,7 @@ import { CustomText } from "../common/CustomText";
 import { getCategories } from "@/utils/storage";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-
+import { getColorValue } from "@/constants/Colors";
 interface Category {
   id: string;
   title: string;
@@ -206,7 +206,7 @@ export function CategoryHeatmap({
     <View className="space-y-6">
       {categories.map((category) => {
         const categoryData = data.filter((d) => d.categoryId === category.id);
-        const categoryColor = category.color;
+        const categoryColor = getColorValue(category.color);
 
         return (
           <View key={category.id} className="bg-white rounded-xl p-4">
@@ -215,7 +215,7 @@ export function CategoryHeatmap({
                 <CustomText
                   size="sm"
                   weight="bold"
-                  className="opacity-80"
+                  // className="opacity-80"
                   style={{ color: categoryColor }}
                 >
                   {category.title}
@@ -231,7 +231,7 @@ export function CategoryHeatmap({
                 {OPACITY_LEVELS.map((opacity) => (
                   <View
                     key={opacity}
-                    className="w-3 h-3 rounded-sm"
+                    className="w-4 h-4 rounded-[3px] ml-1"
                     style={{
                       backgroundColor: categoryColor,
                       opacity: getOpacityValue(opacity),

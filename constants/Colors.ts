@@ -57,8 +57,44 @@ export const COLORS = [
   { id: "neutral", value: "#525252", tailwindValue: "bg-neutral-600" },
   { id: "stone", value: "#57534E", tailwindValue: "bg-stone-600" },
   { id: "warmGray", value: "#4B5563", tailwindValue: "bg-gray-600" },
+  {
+    id: "diamond",
+    value: "#5F83FC",
+    tailwindValue: "bg-[#5F83FC]",
+  },
+  {
+    id: "ruby",
+    value: "#FD88A0",
+    tailwindValue: "bg-[#FD88A0]",
+  },
+  {
+    id: "master",
+    value: "#F28FDF",
+    tailwindValue: "bg-[#F28FDF]",
+  },
+  {
+    id: "platinum",
+    value: "#60EFB2",
+    tailwindValue: "bg-[#60EFB2]",
+  },
+  {
+    id: "gold",
+    value: "#FDB859",
+    tailwindValue: "bg-[#FDB859]",
+  },
+  {
+    id: "silver",
+    value: "#817B89",
+    tailwindValue: "bg-[#817B89]",
+  },
+  {
+    id: "bronze",
+    value: "#88511E",
+    tailwindValue: "bg-[#88511E]",
+  },
 ];
 
 export const getColorValue = (colorId: string) => {
-  return COLORS.find((c) => c.id === colorId)?.value || "#E5E7EB";
+  const color = COLORS.find((c) => c.id === colorId);
+  return color ? color.value : "#E5E7EB";
 };
