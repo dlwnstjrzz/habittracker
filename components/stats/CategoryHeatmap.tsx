@@ -1,7 +1,8 @@
-import { View } from "react-native";
+import { View, ScrollView } from "react-native";
 import { CustomText } from "../common/CustomText";
 import { getCategories } from "@/utils/storage";
 import { useEffect, useState } from "react";
+import { format } from "date-fns";
 
 interface Category {
   id: string;
@@ -17,6 +18,7 @@ interface HeatmapProps {
   }[];
   startDate: string;
   endDate: string;
+  viewMode: "month" | "year"; // viewMode 추가
 }
 
 // 투명도로 완료율을 표현
@@ -41,16 +43,68 @@ function getDaysInMonth() {
   return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 }
 
-function getMonthDates() {
+// 월 데이터 타입 정의 추가
+type MonthData = {
+  month: string;
+  weeks: string[][];
+};
+
+function getMonthDates(viewMode: "month" | "year") {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
-  const daysInMonth = getDaysInMonth();
 
-  return Array.from({ length: daysInMonth }, (_, i) => {
-    const date = new Date(year, month, i + 1);
-    return date.toISOString().split("T")[0];
-  });
+  if (viewMode === "month") {
+    // 월간 뷰 로직은 그대로 유지
+    const daysInMonth = getDaysInMonth();
+    return Array.from({ length: daysInMonth }, (_, i) => {
+      const date = new Date(year, month, i + 1);
+      return date.toISOString().split("T")[0];
+    });
+  } else {
+    // 최근 6개월의 데이터를 월별로 그룹화
+    const monthsData: MonthData[] = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const targetMonth = new Date(year, month - i, 1);
+      const monthStr = format(targetMonth, "M월");
+      let currentWeek: string[] = [];
+      const weeks: string[][] = [];
+
+      const daysInMonth = new Date(
+        targetMonth.getFullYear(),
+        targetMonth.getMonth() + 1,
+        0
+      ).getDate();
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(
+          targetMonth.getFullYear(),
+          targetMonth.getMonth(),
+          day
+        );
+        const dateStr = date.toISOString().split("T")[0];
+
+        currentWeek.push(dateStr);
+
+        if (currentWeek.length === 7) {
+          weeks.push([...currentWeek]);
+          currentWeek = [];
+        }
+      }
+
+      if (currentWeek.length > 0) {
+        weeks.push(currentWeek);
+      }
+
+      monthsData.push({
+        month: monthStr,
+        weeks,
+      });
+    }
+
+    return monthsData;
+  }
 }
 
 // 현재 날짜 기준으로 목데이터 생성
@@ -131,9 +185,10 @@ export function CategoryHeatmap({
   data: propData,
   startDate,
   endDate,
+  viewMode,
 }: HeatmapProps) {
   const [categories, setCategories] = useState<Category[]>([]);
-  const monthDates = getMonthDates();
+  const monthDates = getMonthDates(viewMode);
   const data = MOCK_DATA; // 나중에 propData로 변경
 
   useEffect(() => {
@@ -156,9 +211,21 @@ export function CategoryHeatmap({
         return (
           <View key={category.id} className="bg-white rounded-xl p-4">
             <View className="flex-row items-center justify-between mb-4">
-              <CustomText size="base" weight="bold" className="text-gray-900">
-                {category.title}
-              </CustomText>
+              <View>
+                <CustomText
+                  size="sm"
+                  weight="bold"
+                  className="opacity-80"
+                  style={{ color: categoryColor }}
+                >
+                  {category.title}
+                </CustomText>
+                {/* {viewMode === "year" && (
+                  <CustomText size="xs" className="text-gray-500 mt-1">
+                    최근 6개월
+                  </CustomText>
+                )} */}
+              </View>
               {/* 범례 */}
               <View className="flex-row items-center space-x-1">
                 {OPACITY_LEVELS.map((opacity) => (
@@ -175,29 +242,83 @@ export function CategoryHeatmap({
             </View>
 
             {/* 히트맵 그리드 */}
-            <View className="flex-row flex-wrap">
-              {monthDates.map((dateStr) => {
-                const dayData = categoryData.find((d) => d.date === dateStr);
-                const opacity = dayData
-                  ? getOpacityValue(
-                      getOpacityByCompletion(dayData.completionRate)
-                    )
-                  : 0.1;
+            {viewMode === "month" ? (
+              <View className="flex-row flex-wrap">
+                {monthDates.map((dateStr) => {
+                  const dayData = categoryData.find((d) => d.date === dateStr);
+                  const opacity = dayData
+                    ? getOpacityValue(
+                        getOpacityByCompletion(dayData.completionRate)
+                      )
+                    : 0.1;
 
-                return (
-                  <View
-                    key={dateStr}
-                    className="m-[2px] rounded-[4px]"
-                    style={{
-                      width: 22,
-                      height: 22,
-                      backgroundColor: categoryColor,
-                      opacity,
-                    }}
-                  />
-                );
-              })}
-            </View>
+                  return (
+                    <View
+                      key={dateStr}
+                      className="m-[1px] rounded-[4px]"
+                      style={{
+                        width: 18,
+                        height: 18,
+                        backgroundColor: categoryColor,
+                        opacity,
+                      }}
+                    />
+                  );
+                })}
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="flex-row"
+              >
+                {monthDates.map((monthData, monthIndex) => (
+                  <View key={monthIndex} className="mr-4">
+                    {/* 월 헤더 */}
+                    <View className="flex-row items-center mb-2">
+                      <CustomText
+                        size="xs"
+                        weight="medium"
+                        className="opacity-80"
+                        style={{ color: categoryColor }}
+                      >
+                        {monthData.month}
+                      </CustomText>
+                    </View>
+                    {/* 주차별 데이터 */}
+                    <View className="flex-row">
+                      {monthData.weeks.map((week, weekIndex) => (
+                        <View key={weekIndex} className="flex-col">
+                          {week.map((dateStr) => {
+                            const dayData = categoryData.find(
+                              (d) => d.date === dateStr
+                            );
+                            const opacity = dayData
+                              ? getOpacityValue(
+                                  getOpacityByCompletion(dayData.completionRate)
+                                )
+                              : 0.1;
+
+                            return (
+                              <View
+                                key={dateStr}
+                                className="m-[1px] rounded-[3px]"
+                                style={{
+                                  width: 18,
+                                  height: 18,
+                                  backgroundColor: categoryColor,
+                                  opacity,
+                                }}
+                              />
+                            );
+                          })}
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
           </View>
         );
       })}

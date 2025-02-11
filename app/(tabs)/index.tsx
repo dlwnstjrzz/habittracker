@@ -62,7 +62,7 @@ function MainScreen() {
 
         {/* Calendar Strip */}
         {selectedDate && <WeeklyDatePicker />}
-
+        <View className="h-[1px] my-4" />
         {/* Todo Lists */}
         <TodoList />
       </ScrollView>

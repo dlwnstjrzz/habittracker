@@ -81,10 +81,10 @@ export default function Category({
   return (
     <View className="mb-6">
       {/* 카테고리 헤더 */}
-      <View className="flex-row items-center justify-between mb-2">
+      <View className="flex-row items-center justify-between mb-2 bg-gray-100 rounded-lg p-2">
         <View className="flex-row items-center">
           <CustomText
-            size="lg"
+            size="sm"
             weight="bold"
             style={{ color: getColorValue(category.color) }}
           >

@@ -69,6 +69,7 @@ export default function StatsScreen() {
             data={heatmapData}
             startDate={getStartDate()}
             endDate={new Date().toISOString()}
+            viewMode={viewMode}
           />
         </View>
       </ScrollView>

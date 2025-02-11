@@ -84,7 +84,7 @@ export function TodoItem({
           onChangeText={setEditText}
           className="flex-1 border-b-2 px-1 py-2"
           style={{
-            fontSize: 16,
+            fontSize: 14,
             fontFamily: "SpoqaHanSansNeo-Regular",
             borderBottomColor: categoryColor,
           }}
@@ -116,8 +116,8 @@ export function TodoItem({
           {isCompleted && <Check size={16} color="white" strokeWidth={4} />}
         </View>
         <CustomText
-          size="base"
-          weight="medium"
+          size="sm"
+          weight="regular"
           className={`${
             isCompleted ? "text-gray-400 line-through" : "text-gray-700"
           }`}

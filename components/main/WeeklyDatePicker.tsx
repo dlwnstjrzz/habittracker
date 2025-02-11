@@ -43,9 +43,9 @@ function DateButton({
 }: DateButtonProps) {
   return (
     <View
-      className={`w-10 h-10 rounded-xl items-center justify-center ${
-        selected ? "bg-blue-500" : "bg-transparent"
-      } ${isToday ? "border-2 border-blue-500" : ""}`}
+      className={`w-8 h-8 rounded-full items-center justify-center ${
+        selected ? "bg-blue-500" : ""
+      } ${isToday ? "bg-gray-200" : ""}`}
     >
       {children}
     </View>
@@ -77,7 +77,6 @@ export default function WeeklyDatePicker() {
 
   const handleDateSelect = (date: string) => {
     setSelectedDate(date);
-    console.log(1111, selectedDate);
   };
 
   // 현재 보고 있는 주의 시작일을 상태로 관리
@@ -116,10 +115,10 @@ export default function WeeklyDatePicker() {
         <View className="flex-row items-center space-x-4">
           {/* 월/년과 완료/전체 */}
           <View className="flex-row items-center space-x-2">
-            <CustomText size="lg" weight="bold" className="text-gray-900">
+            <CustomText size="base" weight="bold" className="text-gray-900">
               {format(currentWeekStart, "yyyy년 M월")}
             </CustomText>
-            <View className="flex-row items-center px-2 py-0.5">
+            {/* <View className="flex-row items-center px-2 py-0.5">
               <CustomText
                 size="lg"
                 weight="bold"
@@ -140,7 +139,7 @@ export default function WeeklyDatePicker() {
               ) : (
                 <View className="w-1.5 h-1.5 rounded-full bg-blue-500 ml-1" />
               )}
-            </View>
+            </View> */}
           </View>
         </View>
 
@@ -209,6 +208,7 @@ export default function WeeklyDatePicker() {
 
             return (
               <Pressable
+                style={{ width: 40, alignItems: "center" }}
                 key={i}
                 onPress={() => handleDateSelect(format(date, "yyyy-MM-dd"))}
               >
@@ -218,13 +218,11 @@ export default function WeeklyDatePicker() {
                   hasStreak={hasStreak && isSelected}
                 >
                   <CustomText
-                    size="base"
+                    size="sm"
                     weight={isSelected || isToday ? "bold" : "medium"}
                     className={
                       isSelected
                         ? "text-white"
-                        : isToday
-                        ? "text-blue-600"
                         : isSunday
                         ? "text-red-500"
                         : isSaturday

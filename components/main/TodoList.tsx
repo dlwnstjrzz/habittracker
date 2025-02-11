@@ -228,7 +228,7 @@ export default function TodoList() {
                   placeholder="할 일을 입력하세요"
                   className="flex-1 border-b-2 px-1 py-2"
                   style={{
-                    fontSize: 16,
+                    fontSize: 14,
                     fontFamily: "SpoqaHanSansNeo-Regular",
                     color: "#374151",
                     borderBottomColor: getColorValue(category.color),
@@ -250,7 +250,7 @@ export default function TodoList() {
                 onPress={() => handleAddTodoPress(category.id)}
               >
                 <Plus size={20} color="#6B7280" />
-                <CustomText size="base" className="text-gray-500 ml-2">
+                <CustomText size="sm" className="text-gray-500 ml-2">
                   할 일 추가
                 </CustomText>
               </Pressable>
