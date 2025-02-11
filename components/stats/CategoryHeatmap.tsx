@@ -1,7 +1,7 @@
 import { View, ScrollView } from "react-native";
 import { CustomText } from "../common/CustomText";
 import { getCategories } from "@/utils/storage";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { format } from "date-fns";
 import { getColorValue } from "@/constants/Colors";
 
@@ -52,18 +52,17 @@ type MonthData = {
 
 function getMonthDates(viewMode: "month" | "year") {
   const now = new Date();
-  now.setHours(0, 0, 0, 0); // 오늘 날짜의 시작으로 설정
-
-  // 내일 날짜 계산
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  now.setHours(0, 0, 0, 0);
 
   if (viewMode === "month") {
     // 월간 뷰 로직은 그대로 유지
     const daysInMonth = getDaysInMonth();
+
     return Array.from({ length: daysInMonth }, (_, i) => {
       const date = new Date(now.getFullYear(), now.getMonth(), i + 1);
-      return date.toISOString().split("T")[0];
+      const dateStr = date.toLocaleDateString(); // 2/1/2025
+      const [month, day, year] = dateStr.split("/");
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`; // YYYY-MM-DD
     });
   } else {
     const dates: string[][] = [];
@@ -87,9 +86,10 @@ function getMonthDates(viewMode: "month" | "year") {
 
     // 현재 처리 중인 날짜
     let currentDate = new Date(startDate);
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     while (currentDate <= tomorrow) {
-      // tomorrow까지 포함
       const currentMonth = currentDate.getMonth();
 
       // 월이 바뀌면 라벨 추가
@@ -101,13 +101,19 @@ function getMonthDates(viewMode: "month" | "year") {
         lastMonth = currentMonth;
       }
 
-      const dateStr = currentDate.toISOString().split("T")[0];
+      // 날짜 문자열 생성 (로컬 시간 기준)
+      const dateStr = currentDate.toLocaleDateString();
+      const [month, day, year] = dateStr.split("/");
+      const formattedDate = `${year}-${month.padStart(2, "0")}-${day.padStart(
+        2,
+        "0"
+      )}`;
 
       // 현재 날짜가 내일 이후면 빈 문자열 추가
       if (currentDate > tomorrow) {
         currentWeek.push("");
       } else {
-        currentWeek.push(dateStr);
+        currentWeek.push(formattedDate);
       }
 
       if (currentWeek.length === 7) {
@@ -122,7 +128,6 @@ function getMonthDates(viewMode: "month" | "year") {
 
     // 마지막 주 처리
     if (currentWeek.length > 0) {
-      // 나머지 날짜를 빈 문자열로 채움
       while (currentWeek.length < 7) {
         currentWeek.push("");
       }
@@ -132,11 +137,6 @@ function getMonthDates(viewMode: "month" | "year") {
     return { dates, monthLabels };
   }
 }
-
-// 현재 날짜 기준으로 목데이터 생성
-const now = new Date();
-const year = now.getFullYear();
-const month = (now.getMonth() + 1).toString().padStart(2, "0");
 
 // opacity 값을 rgba로 변환하는 함수 추가
 function getOpacityValue(level: string) {
@@ -203,17 +203,20 @@ export function CategoryHeatmap({ viewMode }: HeatmapProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [heatmapData, setHeatmapData] = useState<HeatmapProps["data"]>([]);
   const monthDates = getMonthDates(viewMode);
+  console.log(111, monthDates);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const scrollViewRefs = useRef<{ [key: string]: ScrollView | null }>({});
 
   useEffect(() => {
     loadData();
   }, []);
-
   const loadData = async () => {
     const result = await getCategories();
     if (result) {
       setCategories(result.categories);
       const processedData = processDataForHeatmap(result.todos);
       setHeatmapData(processedData);
+      setIsDataLoaded(true);
     }
   };
 
@@ -285,10 +288,19 @@ export function CategoryHeatmap({ viewMode }: HeatmapProps) {
               </View>
             ) : (
               <ScrollView
+                ref={(ref) => {
+                  scrollViewRefs.current[category.id] = ref;
+                }}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                ref={(scrollView) => {
-                  scrollView?.scrollToEnd({ animated: false });
+                onLayout={() => {
+                  if (isDataLoaded) {
+                    requestAnimationFrame(() => {
+                      scrollViewRefs.current[category.id]?.scrollToEnd({
+                        animated: true,
+                      });
+                    });
+                  }
                 }}
               >
                 <View>
