@@ -4,6 +4,7 @@ import { getCategories } from "@/utils/storage";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { getColorValue } from "@/constants/Colors";
+
 interface Category {
   id: string;
   title: string;
@@ -51,59 +52,84 @@ type MonthData = {
 
 function getMonthDates(viewMode: "month" | "year") {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  now.setHours(0, 0, 0, 0); // 오늘 날짜의 시작으로 설정
+
+  // 내일 날짜 계산
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
   if (viewMode === "month") {
     // 월간 뷰 로직은 그대로 유지
     const daysInMonth = getDaysInMonth();
     return Array.from({ length: daysInMonth }, (_, i) => {
-      const date = new Date(year, month, i + 1);
+      const date = new Date(now.getFullYear(), now.getMonth(), i + 1);
       return date.toISOString().split("T")[0];
     });
   } else {
-    // 최근 6개월의 데이터를 월별로 그룹화
-    const monthsData: MonthData[] = [];
+    const dates: string[][] = [];
+    const monthLabels: {
+      label: string;
+      weekIndex: number;
+    }[] = [];
+    let currentWeek: string[] = [];
+    let weekIndex = 0;
+    let lastMonth = -1;
 
-    for (let i = 5; i >= 0; i--) {
-      const targetMonth = new Date(year, month - i, 1);
-      const monthStr = format(targetMonth, "M월");
-      let currentWeek: string[] = [];
-      const weeks: string[][] = [];
+    // 시작일을 6개월 전으로 설정
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 5);
+    startDate.setDate(1);
 
-      const daysInMonth = new Date(
-        targetMonth.getFullYear(),
-        targetMonth.getMonth() + 1,
-        0
-      ).getDate();
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(
-          targetMonth.getFullYear(),
-          targetMonth.getMonth(),
-          day
-        );
-        const dateStr = date.toISOString().split("T")[0];
-
-        currentWeek.push(dateStr);
-
-        if (currentWeek.length === 7) {
-          weeks.push([...currentWeek]);
-          currentWeek = [];
-        }
-      }
-
-      if (currentWeek.length > 0) {
-        weeks.push(currentWeek);
-      }
-
-      monthsData.push({
-        month: monthStr,
-        weeks,
-      });
+    // 시작일을 이전 일요일로 조정
+    while (startDate.getDay() !== 0) {
+      startDate.setDate(startDate.getDate() - 1);
     }
 
-    return monthsData;
+    // 현재 처리 중인 날짜
+    let currentDate = new Date(startDate);
+
+    while (currentDate <= tomorrow) {
+      // tomorrow까지 포함
+      const currentMonth = currentDate.getMonth();
+
+      // 월이 바뀌면 라벨 추가
+      if (currentMonth !== lastMonth) {
+        monthLabels.push({
+          label: format(currentDate, "M월"),
+          weekIndex,
+        });
+        lastMonth = currentMonth;
+      }
+
+      const dateStr = currentDate.toISOString().split("T")[0];
+
+      // 현재 날짜가 내일 이후면 빈 문자열 추가
+      if (currentDate > tomorrow) {
+        currentWeek.push("");
+      } else {
+        currentWeek.push(dateStr);
+      }
+
+      if (currentWeek.length === 7) {
+        dates.push([...currentWeek]);
+        currentWeek = [];
+        weekIndex++;
+      }
+
+      // 다음 날짜로
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // 마지막 주 처리
+    if (currentWeek.length > 0) {
+      // 나머지 날짜를 빈 문자열로 채움
+      while (currentWeek.length < 7) {
+        currentWeek.push("");
+      }
+      dates.push(currentWeek);
+    }
+
+    return { dates, monthLabels };
   }
 }
 
@@ -111,57 +137,6 @@ function getMonthDates(viewMode: "month" | "year") {
 const now = new Date();
 const year = now.getFullYear();
 const month = (now.getMonth() + 1).toString().padStart(2, "0");
-
-const MOCK_DATA = [
-  // 빨간색 카테고리의 데이터
-  {
-    categoryId: "red",
-    date: `${year}-${month}-01`,
-    completionRate: 0.8,
-  },
-  {
-    categoryId: "red",
-    date: `${year}-${month}-02`,
-    completionRate: 0.4,
-  },
-  {
-    categoryId: "red",
-    date: `${year}-${month}-05`,
-    completionRate: 1.0,
-  },
-  // 파란색 카테고리의 데이터
-  {
-    categoryId: "blue",
-    date: `${year}-${month}-01`,
-    completionRate: 0.6,
-  },
-  {
-    categoryId: "blue",
-    date: `${year}-${month}-03`,
-    completionRate: 0.3,
-  },
-  {
-    categoryId: "blue",
-    date: `${year}-${month}-06`,
-    completionRate: 0.9,
-  },
-  // 초록색 카테고리의 데이터
-  {
-    categoryId: "green",
-    date: `${year}-${month}-02`,
-    completionRate: 0.7,
-  },
-  {
-    categoryId: "green",
-    date: `${year}-${month}-04`,
-    completionRate: 0.5,
-  },
-  {
-    categoryId: "green",
-    date: `${year}-${month}-07`,
-    completionRate: 1.0,
-  },
-];
 
 // opacity 값을 rgba로 변환하는 함수 추가
 function getOpacityValue(level: string) {
@@ -181,31 +156,73 @@ function getOpacityValue(level: string) {
   }
 }
 
-export function CategoryHeatmap({
-  data: propData,
-  startDate,
-  endDate,
-  viewMode,
-}: HeatmapProps) {
+interface TodoData {
+  id: string;
+  text: string;
+  completed: boolean;
+  date: string;
+  categoryId: string;
+}
+
+function processDataForHeatmap(todos: Record<string, TodoData[]>) {
+  const result: {
+    categoryId: string;
+    date: string;
+    completionRate: number;
+  }[] = [];
+
+  // 날짜별, 카테고리별로 완료율 계산
+  Object.entries(todos).forEach(([date, dayTodos]) => {
+    // 카테고리별로 그룹화
+    const categoryGroups = dayTodos.reduce((acc, todo) => {
+      if (!acc[todo.categoryId]) {
+        acc[todo.categoryId] = [];
+      }
+      acc[todo.categoryId].push(todo);
+      return acc;
+    }, {} as Record<string, TodoData[]>);
+
+    // 각 카테고리의 완료율 계산
+    Object.entries(categoryGroups).forEach(([categoryId, todos]) => {
+      const completedCount = todos.filter((todo) => todo.completed).length;
+      const completionRate =
+        todos.length > 0 ? completedCount / todos.length : 0;
+
+      result.push({
+        categoryId,
+        date,
+        completionRate,
+      });
+    });
+  });
+
+  return result;
+}
+
+export function CategoryHeatmap({ viewMode }: HeatmapProps) {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [heatmapData, setHeatmapData] = useState<HeatmapProps["data"]>([]);
   const monthDates = getMonthDates(viewMode);
-  const data = MOCK_DATA; // 나중에 propData로 변경
 
   useEffect(() => {
-    loadCategories();
+    loadData();
   }, []);
 
-  const loadCategories = async () => {
+  const loadData = async () => {
     const result = await getCategories();
     if (result) {
       setCategories(result.categories);
+      const processedData = processDataForHeatmap(result.todos);
+      setHeatmapData(processedData);
     }
   };
 
   return (
     <View className="space-y-6">
       {categories.map((category) => {
-        const categoryData = data.filter((d) => d.categoryId === category.id);
+        const categoryData = heatmapData.filter(
+          (d) => d.categoryId === category.id
+        );
         const categoryColor = getColorValue(category.color);
 
         return (
@@ -270,53 +287,79 @@ export function CategoryHeatmap({
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                className="flex-row"
+                ref={(scrollView) => {
+                  scrollView?.scrollToEnd({ animated: false });
+                }}
               >
-                {monthDates.map((monthData, monthIndex) => (
-                  <View key={monthIndex} className="mr-4">
-                    {/* 월 헤더 */}
-                    <View className="flex-row items-center mb-2">
-                      <CustomText
-                        size="xs"
-                        weight="medium"
-                        className="opacity-80"
-                        style={{ color: categoryColor }}
+                <View>
+                  {/* 월 라벨 */}
+                  <View className="flex-row mb-2 relative h-5">
+                    {monthDates.monthLabels.map((monthLabel) => (
+                      <View
+                        key={monthLabel.label}
+                        style={{
+                          position: "absolute",
+                          left: monthLabel.weekIndex * 20, // 각 주의 너비(18 + 2)
+                        }}
                       >
-                        {monthData.month}
-                      </CustomText>
-                    </View>
-                    {/* 주차별 데이터 */}
-                    <View className="flex-row">
-                      {monthData.weeks.map((week, weekIndex) => (
-                        <View key={weekIndex} className="flex-col">
-                          {week.map((dateStr) => {
-                            const dayData = categoryData.find(
-                              (d) => d.date === dateStr
-                            );
-                            const opacity = dayData
-                              ? getOpacityValue(
-                                  getOpacityByCompletion(dayData.completionRate)
-                                )
-                              : 0.1;
+                        <CustomText
+                          size="xs"
+                          weight="medium"
+                          className="opacity-60"
+                          style={{ color: categoryColor }}
+                        >
+                          {monthLabel.label}
+                        </CustomText>
+                      </View>
+                    ))}
+                  </View>
 
+                  {/* 히트맵 그리드 */}
+                  <View className="flex-row">
+                    {monthDates.dates.map((week, weekIndex) => (
+                      <View key={weekIndex} className="flex-col">
+                        {week.map((dateStr, dayIndex) => {
+                          // 빈 문자열이면 투명한 셀 렌더링
+                          if (!dateStr) {
                             return (
                               <View
-                                key={dateStr}
+                                key={`empty-${weekIndex}-${dayIndex}`}
                                 className="m-[1px] rounded-[3px]"
                                 style={{
                                   width: 18,
                                   height: 18,
-                                  backgroundColor: categoryColor,
-                                  opacity,
+                                  backgroundColor: "transparent",
                                 }}
                               />
                             );
-                          })}
-                        </View>
-                      ))}
-                    </View>
+                          }
+
+                          const dayData = categoryData.find(
+                            (d) => d.date === dateStr
+                          );
+                          const opacity = dayData
+                            ? getOpacityValue(
+                                getOpacityByCompletion(dayData.completionRate)
+                              )
+                            : 0.1;
+
+                          return (
+                            <View
+                              key={dateStr}
+                              className="m-[1px] rounded-[3px]"
+                              style={{
+                                width: 18,
+                                height: 18,
+                                backgroundColor: categoryColor,
+                                opacity,
+                              }}
+                            />
+                          );
+                        })}
+                      </View>
+                    ))}
                   </View>
-                ))}
+                </View>
               </ScrollView>
             )}
           </View>
@@ -324,21 +367,4 @@ export function CategoryHeatmap({
       })}
     </View>
   );
-}
-
-// 데이터를 카테고리별로 그룹화하는 헬퍼 함수
-function groupByCategory(data: HeatmapProps["data"]) {
-  return data.reduce((acc, curr) => {
-    if (!acc[curr.categoryId]) {
-      acc[curr.categoryId] = [];
-    }
-    acc[curr.categoryId].push(curr);
-    return acc;
-  }, {} as Record<string, typeof data>);
-}
-
-// 카테고리 ID로 이름을 가져오는 함수 (실제 구현 필요)
-function getCategoryName(categoryId: string) {
-  // TODO: categories 데이터에서 실제 이름을 가져오도록 구현
-  return categoryId;
 }

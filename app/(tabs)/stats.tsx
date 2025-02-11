@@ -6,20 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { CustomText } from "@/components/common/CustomText";
 
 export default function StatsScreen() {
-  const [heatmapData, setHeatmapData] = useState([]);
   const [viewMode, setViewMode] = useState<"month" | "year">("month");
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    const data = await getCategories();
-    if (data) {
-      const processedData = processDataForHeatmap(data.todos, data.categories);
-      setHeatmapData(processedData);
-    }
-  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -66,7 +53,6 @@ export default function StatsScreen() {
       <ScrollView className="flex-1">
         <View className="p-4">
           <CategoryHeatmap
-            data={heatmapData}
             startDate={getStartDate()}
             endDate={new Date().toISOString()}
             viewMode={viewMode}
@@ -75,40 +61,6 @@ export default function StatsScreen() {
       </ScrollView>
     </SafeAreaView>
   );
-}
-
-function processDataForHeatmap(
-  todos: Record<string, any[]>,
-  categories: any[]
-) {
-  const result = [];
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-
-  // 현재 월의 모든 날짜에 대해 완료율 계산
-  Object.entries(todos).forEach(([date, dayTodos]) => {
-    const todoDate = new Date(date);
-    // 현재 월의 데이터만 처리
-    if (todoDate.getMonth() === month && todoDate.getFullYear() === year) {
-      // 카테고리별로 완료율 계산
-      categories.forEach((category) => {
-        const categoryTodos = dayTodos.filter(
-          (todo) => todo.categoryId === category.id
-        );
-        if (categoryTodos.length > 0) {
-          const completedTodos = categoryTodos.filter((todo) => todo.completed);
-          result.push({
-            categoryId: category.id,
-            date: date,
-            completionRate: completedTodos.length / categoryTodos.length,
-          });
-        }
-      });
-    }
-  });
-
-  return result;
 }
 
 function getStartDate() {
