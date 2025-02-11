@@ -52,7 +52,7 @@ export default function TodoList() {
       setTodos(data.todos);
     }
   };
-
+  console.log("todos", todos);
   // 선택된 날짜의 todos를 카테고리별로 그룹화
   const getTodosByCategory = useCallback(
     (categoryId: string) => {
