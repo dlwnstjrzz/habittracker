@@ -35,6 +35,7 @@ interface CategoryProps {
   onDelete: (id: string) => void;
   onReorder: () => void;
   renderAddTodo: () => React.ReactNode;
+  onTodoSetReminder: (todoId: string, time?: Date | null) => void;
 }
 
 export default function Category({
@@ -48,6 +49,7 @@ export default function Category({
   onDelete,
   onReorder,
   renderAddTodo,
+  onTodoSetReminder,
 }: CategoryProps) {
   const actionSheetRef = useRef<BottomSheetModal>(null);
   const editModalRef = useRef<BottomSheetModal>(null);
@@ -108,6 +110,7 @@ export default function Category({
             onToggle={() => onTodoToggle(todo.id)}
             onEdit={onTodoEdit}
             onDelete={onTodoDelete}
+            onSetReminder={onTodoSetReminder}
           />
         ))}
         {renderAddTodo()}

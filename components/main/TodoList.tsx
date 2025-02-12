@@ -22,6 +22,7 @@ interface Todo {
   completed: boolean;
   date: string;
   categoryId: string;
+  reminderTime?: string | null;
 }
 
 interface Category {
@@ -195,6 +196,18 @@ export default function TodoList() {
     [todos]
   );
 
+  const handleSetReminder = async (todoId: string, time?: string | null) => {
+    const updatedTodos = {
+      ...todos,
+      [selectedDate]: todos[selectedDate].map((todo) =>
+        todo.id === todoId ? { ...todo, reminderTime: time } : todo
+      ),
+    };
+    console.log("updatedTodos", updatedTodos);
+    setTodos(updatedTodos);
+    await saveTodoData({ categories, todos: updatedTodos });
+  };
+
   console.log("categories", categories);
   return (
     <View className="flex-1 px-4">
@@ -207,6 +220,7 @@ export default function TodoList() {
           onTodoCreate={(todo) => handleCreateTodo(category.id, todo)}
           onTodoEdit={(todoId, newText) => handleEditTodo(todoId, newText)}
           onTodoDelete={(todoId) => handleDeleteTodo(todoId)}
+          onTodoSetReminder={handleSetReminder}
           onUpdate={handleUpdateCategory}
           onDelete={handleDeleteCategory}
           onReorder={() => {
