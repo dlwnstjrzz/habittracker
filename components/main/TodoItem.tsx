@@ -12,6 +12,8 @@ import {
   scheduleNotification,
   cancelNotification,
 } from "@/utils/notification";
+import { FlowerIcon } from "@/assets/icons/FlowerIcon";
+import { FlowerFillIcon } from "@/assets/icons/FlowerFillIcon";
 
 interface TodoItemProps {
   todo: {
@@ -174,14 +176,23 @@ export function TodoItem({
         className="flex-row items-center flex-1"
         onPress={handleToggle}
       >
-        <View
-          className="w-6 h-6 rounded-md mr-3 border-2 items-center justify-center"
-          style={{
-            backgroundColor: isCompleted ? categoryColor : "transparent",
-            borderColor: isCompleted ? categoryColor : "#D1D5DB",
-          }}
-        >
-          {isCompleted && <Check size={16} color="white" strokeWidth={4} />}
+        <View className="mr-2" style={{ position: "relative" }}>
+          <FlowerIcon
+            size={24}
+            color={isCompleted ? categoryColor : "#D1D5DB"}
+          />
+          {isCompleted && (
+            <View
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                opacity: 0.2, // 투명도 조절 가능
+              }}
+            >
+              <FlowerFillIcon size={24} color={categoryColor} />
+            </View>
+          )}
         </View>
         <View>
           <CustomText
