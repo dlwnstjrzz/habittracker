@@ -8,17 +8,16 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-
-import "../global.css";
+import * as Notifications from "expo-notifications";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { createTamagui, TamaguiProvider, View } from "tamagui";
+import { createTamagui, TamaguiProvider } from "tamagui";
 import { defaultConfig } from "@tamagui/config/v4";
 import { Platform, LogBox } from "react-native";
 import { GLView } from "expo-gl";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 const config = createTamagui(defaultConfig);
-
+import "../global.css";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -28,6 +27,15 @@ if (Platform.OS === "android") {
   // @ts-ignore
   global.WebGL2RenderingContext = GLView.createContextAsync;
 }
+
+// 알림 기본 설정
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

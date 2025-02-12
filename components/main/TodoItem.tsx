@@ -7,6 +7,11 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { TodoActionSheet } from "./TodoActionSheet";
 import { getColorValue } from "@/constants/Colors";
 import { ReminderModal } from "./ReminderModal";
+import {
+  setupNotifications,
+  scheduleNotification,
+  cancelNotification,
+} from "@/utils/notification";
 
 interface TodoItemProps {
   todo: {
@@ -86,8 +91,29 @@ export function TodoItem({
     }, 100);
   };
 
-  const handleReminderSubmit = (time: Date | null) => {
-    onSetReminder(todo.id, time ? time.toLocaleString() : null);
+  const handleReminderSubmit = async (time: Date | null) => {
+    try {
+      // 알림 권한 확인 및 요청
+      const hasPermission = await setupNotifications();
+      if (!hasPermission) {
+        // 알림 권한이 없을 경우 처리 (예: 사용자에게 알림)
+        return;
+      }
+
+      if (time) {
+        // 알림 스케줄링
+        console.log("time", time);
+        await scheduleNotification(todo.id, todo.text, time);
+      } else {
+        // 알림 취소
+        await cancelNotification(todo.id);
+      }
+
+      // 상태 업데이트
+      onSetReminder(todo.id, time ? time.toLocaleString() : null);
+    } catch (error) {
+      console.error("Error handling reminder:", error);
+    }
   };
 
   // 시간을 "오전/오후 HH:MM" 형식으로 변환

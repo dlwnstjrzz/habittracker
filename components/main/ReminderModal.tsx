@@ -47,12 +47,29 @@ export const ReminderModal = forwardRef<BottomSheetModal, ReminderModalProps>(
     );
 
     const handleSubmit = () => {
-      const time = new Date();
-      time.setHours(parseInt(selectedHour));
-      time.setMinutes(parseInt(selectedMinute));
-      time.setSeconds(0);
-      time.setMilliseconds(0);
-      onSubmit(time);
+      // 현재 날짜의 로컬 시간으로 Date 객체 생성
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const date = now.getDate();
+
+      // 선택된 시간으로 새로운 Date 객체 생성
+      const scheduledTime = new Date(
+        year,
+        month,
+        date,
+        parseInt(selectedHour),
+        parseInt(selectedMinute),
+        0
+      );
+
+      // 만약 선택한 시간이 현재 시간보다 이전이면 다음 날로 설정
+      if (scheduledTime < now) {
+        scheduledTime.setDate(scheduledTime.getDate() + 1);
+      }
+
+      console.log("Local time:", scheduledTime.toLocaleString());
+      onSubmit(scheduledTime);
       (ref as any).current?.dismiss();
     };
 
