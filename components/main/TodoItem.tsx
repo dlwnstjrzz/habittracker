@@ -218,6 +218,7 @@ export function TodoItem({
         onEdit={handleEditPress}
         onDelete={handleDeletePress}
         onSetReminder={handleSetReminder}
+        todoDate={todo.date}
       />
 
       <ReminderModal

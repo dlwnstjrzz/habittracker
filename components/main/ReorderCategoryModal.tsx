@@ -1,4 +1,4 @@
-import { View, Pressable } from "react-native";
+import { View, Pressable, Image } from "react-native";
 import { CustomText } from "../common/CustomText";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { forwardRef, useCallback, useState, useEffect } from "react";
@@ -91,23 +91,37 @@ export const ReorderCategoryModal = forwardRef<
   return (
     <BottomSheetModal
       ref={ref}
-      snapPoints={["90%"]}
+      snapPoints={["70%"]}
       index={0}
       enablePanDownToClose
       backgroundStyle={{ backgroundColor: "white" }}
     >
-      <BottomSheetView className="flex-1 pt-2">
+      <BottomSheetView className="flex-1 pt-2 pb-4">
         {/* 헤더 */}
-        <View className="flex-row items-center justify-between mb-4 px-4">
-          <CustomText size="xl" weight="bold" className="text-gray-900">
-            카테고리 순서 변경
-          </CustomText>
-          <Pressable
-            onPress={() => (ref as any).current?.dismiss()}
-            className="w-10 h-10 items-center justify-center rounded-full"
-          >
-            <X size={24} color="#6B7280" />
-          </Pressable>
+        <View className="px-6 pb-4">
+          <View className="flex-row items-center justify-between">
+            <CustomText size="lg" weight="bold" className="text-gray-900">
+              카테고리 순서 변경
+            </CustomText>
+            <Pressable
+              onPress={() => (ref as any).current?.dismiss()}
+              className="w-8 h-8 items-center justify-center rounded-full bg-gray-50"
+            >
+              <X size={20} color="#6B7280" />
+            </Pressable>
+          </View>
+
+          {/* 안내 문구와 캐릭터 추가 */}
+          <View className="flex-row items-center mt-4 bg-pink-50 rounded-xl p-4">
+            <CustomText size="sm" className="text-gray-600 flex-1">
+              길게 누르고 드래그하면 순서가 변경됩니다!
+            </CustomText>
+            <Image
+              source={require("@/assets/images/rabby2d.png")}
+              className="w-12 h-12"
+              resizeMode="contain"
+            />
+          </View>
         </View>
 
         {/* 드래그 리스트 */}

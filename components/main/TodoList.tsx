@@ -2,12 +2,6 @@ import { View, Pressable, TextInput } from "react-native";
 import { CustomText } from "@/components/common/CustomText";
 import Category from "./Category";
 import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  getCategories,
-  saveCategories,
-  logTodos,
-  logAllStorage,
-} from "@/utils/storage";
 import { Plus, FolderPlus } from "lucide-react-native";
 import { CreateCategoryModal } from "./CreateCategoryModal";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";

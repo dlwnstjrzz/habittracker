@@ -53,11 +53,11 @@ function MainScreen() {
       >
         {/* Character Section */}
         <View className="h-[400px] items-center justify-center bg-gray-50">
-          {/* <Character3D
+          <Character3D
             modelUrl={characterModel}
             animationUrl={characterAnimation}
             textureUrl={characterTexture}
-          /> */}
+          />
         </View>
 
         {/* Calendar Strip */}

@@ -23,11 +23,15 @@ import { useState, useEffect, useMemo } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSelectedDateStore } from "@/store/useSelectedDateStore";
 import { getCompletedTodosCount } from "@/utils/storage";
+import { FlowerIcon } from "@/assets/icons/FlowerIcon";
+import { FlowerFillIcon } from "@/assets/icons/FlowerFillIcon";
+import { useTodoStore } from "@/store/useTodoStore";
 
 interface DateButtonProps {
   selected: boolean;
   isToday: boolean;
   hasStreak: boolean;
+  completedCount: number;
   children: React.ReactNode;
 }
 
@@ -40,15 +44,27 @@ function DateButton({
   selected,
   isToday,
   hasStreak,
+  completedCount,
   children,
 }: DateButtonProps) {
+  // 테두리 색상만 사용
+  const strokeColor =
+    completedCount > 0
+      ? "#EC4899" // pink-500 (진한 분홍)
+      : "#D1D5DB"; // gray-300 (연한 회색)
+
   return (
-    <View
-      className={`w-8 h-8 rounded-full items-center justify-center ${
-        selected ? "bg-blue-500" : ""
-      } ${isToday ? "bg-gray-200" : ""}`}
-    >
-      {children}
+    <View className="items-center">
+      <CustomText
+        size="sm"
+        weight="medium"
+        className={selected ? "text-blue-500" : "text-gray-600"}
+      >
+        {children}
+      </CustomText>
+      <View className="my-1">
+        <FlowerIcon size={24} color={strokeColor} />
+      </View>
     </View>
   );
 }
@@ -56,6 +72,10 @@ function DateButton({
 export default function WeeklyDatePicker() {
   const { selectedDate, setSelectedDate, completedCount } =
     useSelectedDateStore();
+  const { todos } = useTodoStore();
+  const [completedCountsByDate, setCompletedCountsByDate] = useState<
+    Record<string, number>
+  >({});
 
   // 현재 보고 있는 주의 시작일을 상태로 관리
   const currentWeekStart = useMemo(
@@ -92,6 +112,26 @@ export default function WeeklyDatePicker() {
     setSelectedDate(date);
   };
 
+  // todos가 변경될 때마다 완료된 할일 개수 업데이트
+  useEffect(() => {
+    const fetchCompletedCounts = async () => {
+      const counts: Record<string, number> = {};
+      for (let i = 0; i < 7; i++) {
+        const date = addDays(currentWeekStart, i);
+        const dateStr = format(date, "yyyy-MM-dd");
+        // storage에서 가져오는 대신 todos에서 직접 계산
+        const todosForDate = todos[dateStr] || [];
+        const completedCount = todosForDate.filter(
+          (todo) => todo.completed
+        ).length;
+        counts[dateStr] = completedCount;
+      }
+      setCompletedCountsByDate(counts);
+    };
+
+    fetchCompletedCounts();
+  }, [currentWeekStart, todos]);
+
   return (
     <View className="px-4 py-3">
       <View className="flex-row items-center justify-between mb-4">
@@ -102,20 +142,18 @@ export default function WeeklyDatePicker() {
               {format(currentWeekStart, "yyyy년 M월")}
             </CustomText>
 
-            <View className="flex-row items-center px-2 py-0.5">
+            <View className="flex-row items-center px-1 py-0.5">
               <View className="flex-row items-center">
-                <View className="w-6 h-6 rounded-md mr-3 items-center justify-center bg-pink-300">
+                <FlowerIcon size={18} color="gray" />
+                {/* <View className="w-6 h-6 rounded-md mr-3 items-center justify-center bg-pink-300">
                   <Check size={16} color="white" strokeWidth={4} />
-                </View>
+                </View> */}
                 <CustomText
-                  size="sm"
+                  size="base"
                   weight="bold"
                   className="text-gray-700 ml-1"
                 >
                   {completedCount}
-                </CustomText>
-                <CustomText size="sm" className="text-gray-500 ml-1">
-                  개 완료
                 </CustomText>
               </View>
             </View>
@@ -176,41 +214,26 @@ export default function WeeklyDatePicker() {
 
         {/* 날짜 그리드 */}
         <XStack justifyContent="space-between">
-          {[...Array(7)].map((_, i) => {
-            const date = addDays(currentWeekStart, i);
-            const dayNumber = format(date, "d");
-            const isSelected = format(date, "yyyy-MM-dd") === selectedDate;
-            const isToday =
-              format(date, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
-            const isSaturday = i === 5;
-            const isSunday = i === 6;
+          {[...Array(7)].map((_, index) => {
+            const date = addDays(currentWeekStart, index);
+            const dateStr = format(date, "yyyy-MM-dd");
+            const isSelected = dateStr === selectedDate;
+            const isToday = format(new Date(), "yyyy-MM-dd") === dateStr;
+            const dateCompletedCount = completedCountsByDate[dateStr] || 0;
 
             return (
               <Pressable
-                style={{ width: 40, alignItems: "center" }}
-                key={i}
-                onPress={() => handleDateSelect(format(date, "yyyy-MM-dd"))}
+                key={dateStr}
+                onPress={() => handleDateSelect(dateStr)}
+                style={{ width: 40 }}
               >
                 <DateButton
                   selected={isSelected}
-                  isToday={isToday && !isSelected}
-                  hasStreak={hasStreak && isSelected}
+                  isToday={isToday}
+                  hasStreak={false}
+                  completedCount={dateCompletedCount}
                 >
-                  <CustomText
-                    size="sm"
-                    weight={isSelected || isToday ? "bold" : "medium"}
-                    className={
-                      isSelected
-                        ? "text-white"
-                        : isSunday
-                        ? "text-red-500"
-                        : isSaturday
-                        ? "text-blue-500"
-                        : "text-gray-700"
-                    }
-                  >
-                    {dayNumber}
-                  </CustomText>
+                  {format(date, "d")}
                 </DateButton>
               </Pressable>
             );

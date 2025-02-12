@@ -7,17 +7,19 @@ import {
 } from "@gorhom/bottom-sheet";
 import { forwardRef, useCallback } from "react";
 import { Pencil, Trash2, Bell } from "lucide-react-native";
+import { format, isBefore, startOfDay } from "date-fns";
 
 interface TodoActionSheetProps {
   onEdit: () => void;
   onDelete: () => void;
   onSetReminder: () => void;
+  todoDate: string;
 }
 
 export const TodoActionSheet = forwardRef<
   BottomSheetModal,
   TodoActionSheetProps
->(({ onEdit, onDelete, onSetReminder }, ref) => {
+>(({ onEdit, onDelete, onSetReminder, todoDate }, ref) => {
   const renderBackdrop = useCallback(
     (props) => (
       <BottomSheetBackdrop
@@ -28,6 +30,11 @@ export const TodoActionSheet = forwardRef<
       />
     ),
     []
+  );
+
+  const isBeforeToday = isBefore(
+    startOfDay(new Date(todoDate)),
+    startOfDay(new Date())
   );
 
   return (
@@ -46,15 +53,17 @@ export const TodoActionSheet = forwardRef<
             수정하기
           </CustomText>
         </Pressable>
-        <Pressable
-          className="flex-row items-center px-6 py-4"
-          onPress={onSetReminder}
-        >
-          <Bell size={20} color="#6B7280" />
-          <CustomText size="base" className="text-gray-600 ml-3">
-            알림 설정
-          </CustomText>
-        </Pressable>
+        {!isBeforeToday && (
+          <Pressable
+            className="flex-row items-center px-6 py-4"
+            onPress={onSetReminder}
+          >
+            <Bell size={20} color="#6B7280" />
+            <CustomText size="base" className="text-gray-600 ml-3">
+              알림 설정
+            </CustomText>
+          </Pressable>
+        )}
         <Pressable
           className="flex-row items-center px-6 py-4"
           onPress={onDelete}
