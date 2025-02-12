@@ -19,9 +19,10 @@ import {
   CircleCheck,
   CheckCheck,
 } from "lucide-react-native";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSelectedDateStore } from "@/store/useSelectedDateStore";
+import { getCompletedTodosCount } from "@/utils/storage";
 
 interface DateButtonProps {
   selected: boolean;
@@ -52,36 +53,14 @@ function DateButton({
   );
 }
 
-const TaskProgress = ({
-  completed: completedTasks,
-  total: totalTasks,
-}: {
-  completed: number;
-  total: number;
-}) => (
-  <View className="flex-row items-center bg-blue-50 px-3 py-1.5 rounded-full">
-    <CustomText size="base" weight="bold" className="text-blue-600">
-      {completedTasks}
-    </CustomText>
-    <CustomText size="base" className="text-blue-400 mx-0.5">
-      /
-    </CustomText>
-    <CustomText size="base" weight="medium" className="text-blue-500">
-      {totalTasks}
-    </CustomText>
-  </View>
-);
-
 export default function WeeklyDatePicker() {
-  const { selectedDate, setSelectedDate } = useSelectedDateStore();
-
-  const handleDateSelect = (date: string) => {
-    setSelectedDate(date);
-  };
+  const { selectedDate, setSelectedDate, completedCount } =
+    useSelectedDateStore();
 
   // 현재 보고 있는 주의 시작일을 상태로 관리
-  const [currentWeekStart, setCurrentWeekStart] = useState(() =>
-    startOfWeek(new Date(selectedDate), { weekStartsOn: 1 })
+  const currentWeekStart = useMemo(
+    () => startOfWeek(new Date(selectedDate), { weekStartsOn: 1 }),
+    [selectedDate]
   );
 
   // 현재 보고 있는 주가 이번 주인지 확인
@@ -109,6 +88,10 @@ export default function WeeklyDatePicker() {
   const progress = 0; // Assuming totalTasks is 0, so progress is 0
   const hasStreak = false; // Assuming hasStreak is false
 
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date);
+  };
+
   return (
     <View className="px-4 py-3">
       <View className="flex-row items-center justify-between mb-4">
@@ -118,28 +101,24 @@ export default function WeeklyDatePicker() {
             <CustomText size="base" weight="bold" className="text-gray-900">
               {format(currentWeekStart, "yyyy년 M월")}
             </CustomText>
-            {/* <View className="flex-row items-center px-2 py-0.5">
-              <CustomText
-                size="lg"
-                weight="bold"
-                className={progress === 1 ? "text-green-500" : "text-blue-500"}
-              >
-                {progress === 1 ? "Completed" : "In Progress"}
-              </CustomText>
-              <CustomText size="lg" className="text-gray-400 mx-0.5">
-                /
-              </CustomText>
-              <CustomText size="lg" weight="medium" className="text-gray-500">
-                100%
-              </CustomText>
-              {progress === 1 ? (
-                <View className="ml-1 items-center justify-center">
-                  <Check strokeWidth={3} size={18} color="#22C55E" />
+
+            <View className="flex-row items-center px-2 py-0.5">
+              <View className="flex-row items-center">
+                <View className="w-6 h-6 rounded-md mr-3 items-center justify-center bg-pink-300">
+                  <Check size={16} color="white" strokeWidth={4} />
                 </View>
-              ) : (
-                <View className="w-1.5 h-1.5 rounded-full bg-blue-500 ml-1" />
-              )}
-            </View> */}
+                <CustomText
+                  size="sm"
+                  weight="bold"
+                  className="text-gray-700 ml-1"
+                >
+                  {completedCount}
+                </CustomText>
+                <CustomText size="sm" className="text-gray-500 ml-1">
+                  개 완료
+                </CustomText>
+              </View>
+            </View>
           </View>
         </View>
 
@@ -148,7 +127,7 @@ export default function WeeklyDatePicker() {
           {!isCurrentWeek && (
             <Pressable
               onPress={handleGoToToday}
-              className="h-9 px-3 mr-2 rounded-full items-center justify-center bg-gray-100"
+              className="h-8 px-3 mr-2 rounded-full items-center justify-center bg-gray-100"
             >
               <CustomText size="sm" weight="bold" className="text-gray-700">
                 이번 주
@@ -158,13 +137,13 @@ export default function WeeklyDatePicker() {
           <View className="flex-row items-center space-x-2 gap-x-2">
             <Pressable
               onPress={handlePrevWeek}
-              className="w-9 h-9 rounded-xl items-center justify-center bg-gray-100"
+              className="w-8 h-8 rounded-xl items-center justify-center bg-gray-100"
             >
               <ChevronLeft size={24} color="#374151" strokeWidth={2.5} />
             </Pressable>
             <Pressable
               onPress={handleNextWeek}
-              className="w-9 h-9 rounded-xl items-center justify-center bg-gray-100"
+              className="w-8 h-8 rounded-xl items-center justify-center bg-gray-100"
             >
               <ChevronRight size={24} color="#374151" strokeWidth={2.5} />
             </Pressable>

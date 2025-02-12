@@ -77,7 +77,6 @@ export default function Category({
     actionSheetRef.current?.dismiss();
     onDelete(category.id);
   };
-  console.log(getColorValue(category.color));
   return (
     <View className="mb-6">
       {/* 카테고리 헤더 */}

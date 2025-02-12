@@ -99,3 +99,11 @@ export async function clearStorage() {
     console.error("Error clearing storage:", error);
   }
 }
+
+// 특정 날짜의 완료된 할일 개수를 가져오는 함수 추가
+export async function getCompletedTodosCount(date: string): Promise<number> {
+  const data = await getCategories();
+  if (!data || !data.todos[date]) return 0;
+
+  return data.todos[date].filter((todo) => todo.completed).length;
+}

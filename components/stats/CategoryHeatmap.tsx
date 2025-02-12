@@ -1,9 +1,10 @@
 import { View, ScrollView } from "react-native";
 import { CustomText } from "../common/CustomText";
 import { getCategories } from "@/utils/storage";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { format } from "date-fns";
 import { getColorValue } from "@/constants/Colors";
+import { useTodoStore } from "@/store/useTodoStore";
 
 interface Category {
   id: string;
@@ -195,30 +196,29 @@ function processDataForHeatmap(todos: Record<string, TodoData[]>) {
       });
     });
   });
-
   return result;
 }
 
 export function CategoryHeatmap({ viewMode }: HeatmapProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { categories, todos, loadData } = useTodoStore();
   const [heatmapData, setHeatmapData] = useState<HeatmapProps["data"]>([]);
   const monthDates = getMonthDates(viewMode);
-  console.log(111, monthDates);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const scrollViewRefs = useRef<{ [key: string]: ScrollView | null }>({});
 
+  const processedHeatmapData = useMemo(() => {
+    return processDataForHeatmap(todos);
+  }, [todos]);
+
+  useEffect(() => {
+    setHeatmapData(processedHeatmapData);
+    setIsDataLoaded(true);
+  }, [processedHeatmapData]);
+
+  // 초기 로드
   useEffect(() => {
     loadData();
   }, []);
-  const loadData = async () => {
-    const result = await getCategories();
-    if (result) {
-      setCategories(result.categories);
-      const processedData = processDataForHeatmap(result.todos);
-      setHeatmapData(processedData);
-      setIsDataLoaded(true);
-    }
-  };
 
   return (
     <View className="space-y-6">
