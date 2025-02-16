@@ -24,36 +24,45 @@ interface Category {
   color: string;
 }
 
+interface Routine {
+  id: string;
+  title: string;
+  completed: boolean;
+  date: string;
+  categoryId: string;
+}
+
 interface CategoryProps {
   category: Category;
   todos: Todo[];
+  routines: Routine[];
   onTodoToggle: (todoId: string) => void;
   onTodoCreate: (todo: Todo) => void;
   onTodoEdit: (todoId: string, newText: string) => void;
   onTodoDelete: (todoId: string) => void;
-  onUpdate: (id: string, updates: Partial<Category>) => void;
-  onDelete: (id: string) => void;
+  onTodoSetReminder: (todoId: string, time?: string | null) => void;
+  onUpdate: (categoryId: string, updates: Partial<Category>) => void;
+  onDelete: (categoryId: string) => void;
   onReorder: () => void;
-  renderAddTodo: () => React.ReactNode;
-  onTodoSetReminder: (todoId: string, time?: Date | null) => void;
+  renderAddTodo: () => JSX.Element;
 }
 
 export default function Category({
   category,
   todos,
+  routines,
   onTodoToggle,
-  onTodoCreate,
   onTodoEdit,
   onTodoDelete,
+  onTodoSetReminder,
   onUpdate,
   onDelete,
   onReorder,
   renderAddTodo,
-  onTodoSetReminder,
 }: CategoryProps) {
   const actionSheetRef = useRef<BottomSheetModal>(null);
   const editModalRef = useRef<BottomSheetModal>(null);
-
+  console.log("Category routines", routines);
   const handleEdit = () => {
     actionSheetRef.current?.dismiss();
     setTimeout(() => {
@@ -107,7 +116,18 @@ export default function Category({
             key={todo.id}
             todo={todo}
             color={category.color}
-            onToggle={() => onTodoToggle(todo.id)}
+            onToggle={() => onTodoToggle(todo.id, todo.isRoutine)}
+            onEdit={onTodoEdit}
+            onDelete={onTodoDelete}
+            onSetReminder={onTodoSetReminder}
+          />
+        ))}
+        {routines.map((routine) => (
+          <TodoItem
+            key={routine.id}
+            todo={routine}
+            color={category.color}
+            onToggle={() => onTodoToggle(routine.id, routine.isRoutine)}
             onEdit={onTodoEdit}
             onDelete={onTodoDelete}
             onSetReminder={onTodoSetReminder}

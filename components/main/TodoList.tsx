@@ -9,6 +9,7 @@ import { getColorValue } from "@/constants/Colors";
 import { ReorderCategoryModal } from "./ReorderCategoryModal";
 import { useSelectedDateStore } from "@/store/useSelectedDateStore";
 import { useTodoStore } from "@/store/useTodoStore";
+import { useRoutineStore } from "@/store/useRoutineStore";
 
 interface Todo {
   id: string;
@@ -28,6 +29,7 @@ interface Category {
 export default function TodoList() {
   const { categories, todos, setCategories, setTodos, loadData, saveTodoData } =
     useTodoStore();
+  const { routines, saveRoutineData } = useRoutineStore();
   const { selectedDate, setCompletedCount } = useSelectedDateStore();
   const [isAddingTodo, setIsAddingTodo] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
@@ -38,14 +40,11 @@ export default function TodoList() {
 
   useEffect(() => {
     async function init() {
-      try {
-        await loadData();
-      } finally {
-        setIsLoading(false);
-      }
+      await loadData();
+      setIsLoading(false);
     }
     init();
-  }, []);
+  }, [loadData]);
 
   useEffect(() => {
     const completedCount =
@@ -53,15 +52,26 @@ export default function TodoList() {
     setCompletedCount(completedCount);
   }, [selectedDate, todos]);
 
-  const handleTodoToggle = async (todoId: string) => {
-    const updatedTodos = {
-      ...todos,
-      [selectedDate]: todos[selectedDate].map((todo) =>
-        todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
-      ),
-    };
+  const handleTodoToggle = async (todoId: string, isRoutine: boolean) => {
+    if (isRoutine) {
+      const updatedRoutines = routines.map((routine) =>
+        routine.id === todoId
+          ? { ...routine, completed: !routine.completed }
+          : routine
+      );
+      // 루틴 상태 업데이트
+      console.log("updatedRoutines", updatedRoutines);
+      await saveRoutineData(updatedRoutines);
+    } else {
+      const updatedTodos = {
+        ...todos,
+        [selectedDate]: todos[selectedDate].map((todo) =>
+          todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
+        ),
+      };
 
-    await saveTodoData({ categories, todos: updatedTodos });
+      await saveTodoData({ categories, todos: updatedTodos });
+    }
   };
 
   // 선택된 날짜의 todos를 카테고리별로 그룹화
@@ -212,6 +222,17 @@ export default function TodoList() {
 
   console.log("categories", categories);
 
+  const routinesForSelectedDate = routines
+    .filter((routine) => {
+      const startDate = new Date(routine.startDate);
+      const targetDate = new Date(selectedDate);
+      return targetDate >= startDate;
+    })
+    .map((routine) => ({
+      ...routine,
+      isRoutine: true, // 루틴임을 표시
+    }));
+
   // 로딩 중이거나 categories가 undefined인 경우 처리
   if (isLoading || !categories) {
     return <View className="flex-1 px-4" />;
@@ -224,7 +245,12 @@ export default function TodoList() {
           key={category.id}
           category={category}
           todos={getTodosByCategory(category.id)}
-          onTodoToggle={handleTodoToggle}
+          routines={routinesForSelectedDate.filter(
+            (routine) => routine.categoryId === category.id
+          )}
+          onTodoToggle={(todoId, isRoutine) =>
+            handleTodoToggle(todoId, isRoutine)
+          }
           onTodoCreate={(todo) => handleCreateTodo(category.id, todo)}
           onTodoEdit={(todoId, newText) => handleEditTodo(todoId, newText)}
           onTodoDelete={(todoId) => handleDeleteTodo(todoId)}

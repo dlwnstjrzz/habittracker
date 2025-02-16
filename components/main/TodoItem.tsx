@@ -17,7 +17,9 @@ import { FlowerFillIcon } from "@/assets/icons/FlowerFillIcon";
 import { FourFlowerIcon } from "@/assets/icons/FourFlowerIcon";
 import { SakuraIcon } from "@/assets/icons/SakuraIcon";
 import { Lotus2Icon } from "@/assets/icons/Lotus2Icon";
-import { createRoutine } from "@/utils/storage";
+import { createRoutine, saveRoutine } from "@/utils/storage";
+import { useRoutineStore } from "@/store/useRoutineStore";
+import { nanoid } from "nanoid";
 
 interface TodoItemProps {
   todo: {
@@ -27,12 +29,14 @@ interface TodoItemProps {
     date: string;
     categoryId: string;
     reminderTime?: string | null;
+    isRoutine?: boolean;
   };
   color: string;
   onToggle: () => void;
   onEdit: (id: string, newText: string) => void;
   onDelete: (id: string) => void;
   onSetReminder: (id: string, time?: string | null) => void;
+  onDeleteRoutine?: (id: string) => void;
 }
 
 export function TodoItem({
@@ -42,6 +46,7 @@ export function TodoItem({
   onEdit,
   onDelete,
   onSetReminder,
+  onDeleteRoutine,
 }: TodoItemProps) {
   const actionSheetRef = useRef<BottomSheetModal>(null);
   const reminderModalRef = useRef<BottomSheetModal>(null);
@@ -49,8 +54,10 @@ export function TodoItem({
   const [editText, setEditText] = useState(todo.text);
   const [localText, setLocalText] = useState(todo.text);
   const [isDeleted, setIsDeleted] = useState(false);
-
+  console.log("routinestodo", todo);
   const categoryColor = getColorValue(color);
+
+  const addRoutine = useRoutineStore((state) => state.addRoutine);
 
   const handleToggle = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
@@ -135,10 +142,28 @@ export function TodoItem({
 
   const handleMakeRoutine = async () => {
     try {
-      await createRoutine(todo);
+      const routine = {
+        id: nanoid(),
+        todoId: todo.id,
+        text: todo.text,
+        categoryId: todo.categoryId,
+        startDate: todo.date,
+        frequency: "daily",
+        isRoutine: true,
+        completed: false,
+      };
+
+      // 루틴 저장
+      await saveRoutine(routine);
+
+      // 전역 상태 업데이트
+      addRoutine(routine);
+
       actionSheetRef.current?.dismiss();
+      // 선택적: 성공 메시지 표시
     } catch (error) {
       console.error("Error creating routine:", error);
+      // 선택적: 에러 메시지 표시
     }
   };
 
@@ -223,6 +248,8 @@ export function TodoItem({
         onSetReminder={handleSetReminder}
         onMakeRoutine={handleMakeRoutine}
         todoDate={todo.date}
+        isRoutine={todo.isRoutine}
+        onDeleteRoutine={onDeleteRoutine}
       />
 
       <ReminderModal

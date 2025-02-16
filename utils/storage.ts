@@ -22,11 +22,7 @@ export interface Routine {
   categoryId: string;
   startDate: string;
   endDate?: string;
-  frequency?: {
-    type: "daily" | "weekly" | "monthly";
-    days?: number[];
-    dates?: number[];
-  };
+  frequency: "daily" | "weekly" | "monthly";
 }
 
 export interface StorageData {
@@ -36,6 +32,7 @@ export interface StorageData {
 }
 
 const STORAGE_KEY = "todos_v1";
+const ROUTINES_KEY = "routines";
 
 // 초기 카테고리 데이터
 export const initialCategories: Category[] = [
@@ -72,17 +69,6 @@ export async function getCategories(): Promise<StorageData | null> {
       return initialData;
     }
     return JSON.parse(data);
-    // 기존 데이터를 파싱
-    // const parsedData = JSON.parse(data);
-    // console.log("parsedData", parsedData);
-    // // routines 배열이 없다면 추가
-    // if (!parsedData.routines) {
-    //   parsedData.routines = [];
-    //   // 업데이트된 데이터 저장
-    //   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData));
-    // }
-
-    // return parsedData;
   } catch (error) {
     console.error("Error getting categories:", error);
     return null;
@@ -138,42 +124,25 @@ export async function getCompletedTodosCount(date: string): Promise<number> {
 }
 
 // 루틴 저장 함수
-export async function createRoutine(todo: Todo): Promise<void> {
-  const data = await getCategories();
-  if (!data) return;
-
-  const routine: Routine = {
-    id: nanoid(),
-    todoId: todo.id,
-    text: todo.text,
-    categoryId: todo.categoryId,
-    startDate: todo.date,
-  };
-
-  data.routines.push(routine);
-  await saveCategories(data);
+export async function saveRoutine(routine: Routine): Promise<void> {
+  try {
+    const data = await AsyncStorage.getItem(ROUTINES_KEY);
+    const routines = data ? JSON.parse(data) : [];
+    routines.push(routine);
+    await AsyncStorage.setItem(ROUTINES_KEY, JSON.stringify(routines));
+    console.log("routines", routines);
+  } catch (error) {
+    console.error("Error saving routine:", error);
+  }
 }
 
-// 할일 목록 조회 시 루틴 자동 추가
-export async function getTodosByDate(date: string): Promise<Todo[]> {
-  const data = await getCategories();
-  if (!data) return [];
-
-  const todos = data.todos[date] || [];
-  const routineTodos = data.routines
-    .filter((routine) => {
-      const startDate = new Date(routine.startDate);
-      const targetDate = new Date(date);
-      return targetDate >= startDate;
-    })
-    .map((routine) => ({
-      id: `${routine.id}-${date}`,
-      text: routine.text,
-      completed: false,
-      date,
-      categoryId: routine.categoryId,
-      isRoutine: true,
-    }));
-
-  return [...todos, ...routineTodos];
+// 루틴 불러오기 함수
+export async function loadRoutines(): Promise<Routine[]> {
+  try {
+    const data = await AsyncStorage.getItem(ROUTINES_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error("Error loading routines:", error);
+    return [];
+  }
 }

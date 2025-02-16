@@ -25,7 +25,7 @@ interface TodoStore {
     categories: Category[];
     todos: { [date: string]: Todo[] };
   }) => Promise<void>;
-  getTodosByDate: (date: string) => Todo[];
+
   getCompletedCountByDate: (date: string) => number;
 }
 
@@ -42,10 +42,9 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     }
   },
   saveTodoData: async (data) => {
-    await saveCategories(data);
     set({ categories: data.categories, todos: data.todos });
+    await saveCategories(data);
   },
-  getTodosByDate: (date: string) => get().todos[date] || [],
   getCompletedCountByDate: (date: string) =>
     get().todos[date]?.filter((todo) => todo.completed).length || 0,
 }));
