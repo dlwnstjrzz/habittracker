@@ -24,7 +24,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSelectedDateStore } from "@/store/useSelectedDateStore";
 import { getCompletedTodosCount } from "@/utils/storage";
 import { FlowerIcon } from "@/assets/icons/FlowerIcon";
-import { FlowerFillIcon } from "@/assets/icons/FlowerFillIcon";
+
 import { useTodoStore } from "@/store/useTodoStore";
 
 interface DateButtonProps {
@@ -32,6 +32,7 @@ interface DateButtonProps {
   isToday: boolean;
   hasStreak: boolean;
   completedCount: number;
+  dayIndex: number;
   children: React.ReactNode;
 }
 
@@ -45,25 +46,42 @@ function DateButton({
   isToday,
   hasStreak,
   completedCount,
+  dayIndex,
   children,
 }: DateButtonProps) {
-  // 테두리 색상만 사용
-  const strokeColor =
-    completedCount > 0
-      ? "#EC4899" // pink-500 (진한 분홍)
-      : "#D1D5DB"; // gray-300 (연한 회색)
+  const strokeColor = completedCount > 0 ? "#EC4899" : "#D1D5DB";
+
+  const getTextColor = () => {
+    if (selected) return "text-white";
+    if (isToday) return "text-black";
+    if (dayIndex === 5) return "text-blue-500";
+    if (dayIndex === 6) return "text-red-500";
+    return "text-gray-600";
+  };
 
   return (
     <View className="items-center">
-      <CustomText
-        size="sm"
-        weight="medium"
-        className={selected ? "text-blue-500" : "text-gray-600"}
-      >
-        {children}
-      </CustomText>
       <View className="my-1">
-        <FlowerIcon size={24} color={strokeColor} />
+        <FlowerIcon size={23} color={strokeColor} />
+      </View>
+      <View
+        className={`w-7 h-7 rounded-full items-center justify-center
+          ${
+            selected
+              ? "bg-pink-400"
+              : isToday
+              ? "bg-gray-300"
+              : "bg-transparent"
+          }
+        `}
+      >
+        <CustomText
+          size="xs"
+          weight={selected || isToday ? "bold" : "medium"}
+          className={getTextColor()}
+        >
+          {children}
+        </CustomText>
       </View>
     </View>
   );
@@ -77,16 +95,16 @@ export default function WeeklyDatePicker() {
     Record<string, number>
   >({});
 
-  // 현재 보고 있는 주의 시작일을 상태로 관리
-  const currentWeekStart = useMemo(
-    () => startOfWeek(new Date(selectedDate), { weekStartsOn: 1 }),
-    [selectedDate]
-  );
-
-  // 현재 보고 있는 주가 이번 주인지 확인
-  const isCurrentWeek = isSameWeek(currentWeekStart, new Date(), {
-    weekStartsOn: 1,
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+    const today = new Date();
+    return startOfWeek(today, { weekStartsOn: 1 }); // 월요일부터 시작
   });
+
+  // 현재 주인지 확인
+  const isCurrentWeek = useMemo(() => {
+    const today = new Date();
+    return isSameWeek(currentWeekStart, today, { weekStartsOn: 1 });
+  }, [currentWeekStart]);
 
   // 이전 주로 이동
   const handlePrevWeek = () => {
@@ -98,18 +116,18 @@ export default function WeeklyDatePicker() {
     setCurrentWeekStart((prev) => addWeeks(prev, 1));
   };
 
-  // 오늘로 이동하는 함수
+  // 오늘이 있는 주로 이동
   const handleGoToToday = () => {
     const today = new Date();
     setCurrentWeekStart(startOfWeek(today, { weekStartsOn: 1 }));
-    handleDateSelect(format(today, "yyyy-MM-dd"));
+    setSelectedDate(format(today, "yyyy-MM-dd"));
   };
 
   const progress = 0; // Assuming totalTasks is 0, so progress is 0
   const hasStreak = false; // Assuming hasStreak is false
 
-  const handleDateSelect = (date: string) => {
-    setSelectedDate(date);
+  const handleDateSelect = (dateStr: string) => {
+    setSelectedDate(dateStr);
   };
 
   // todos가 변경될 때마다 완료된 할일 개수 업데이트
@@ -196,7 +214,7 @@ export default function WeeklyDatePicker() {
           {["월", "화", "수", "목", "금", "토", "일"].map((day, i) => (
             <View key={day} style={{ width: 40, alignItems: "center" }}>
               <CustomText
-                size="sm"
+                size="xs"
                 weight="medium"
                 className={
                   i === 5
@@ -232,6 +250,7 @@ export default function WeeklyDatePicker() {
                   isToday={isToday}
                   hasStreak={false}
                   completedCount={dateCompletedCount}
+                  dayIndex={index}
                 >
                   {format(date, "d")}
                 </DateButton>

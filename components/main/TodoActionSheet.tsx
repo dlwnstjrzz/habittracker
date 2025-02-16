@@ -6,20 +6,21 @@ import {
   BottomSheetBackdrop,
 } from "@gorhom/bottom-sheet";
 import { forwardRef, useCallback } from "react";
-import { Pencil, Trash2, Bell } from "lucide-react-native";
+import { Pencil, Trash2, Bell, Repeat } from "lucide-react-native";
 import { format, isBefore, startOfDay } from "date-fns";
 
 interface TodoActionSheetProps {
   onEdit: () => void;
   onDelete: () => void;
   onSetReminder: () => void;
+  onMakeRoutine: () => void;
   todoDate: string;
 }
 
 export const TodoActionSheet = forwardRef<
   BottomSheetModal,
   TodoActionSheetProps
->(({ onEdit, onDelete, onSetReminder, todoDate }, ref) => {
+>(({ onEdit, onDelete, onSetReminder, onMakeRoutine, todoDate }, ref) => {
   const renderBackdrop = useCallback(
     (props) => (
       <BottomSheetBackdrop
@@ -40,8 +41,7 @@ export const TodoActionSheet = forwardRef<
   return (
     <BottomSheetModal
       ref={ref}
-      snapPoints={["25%"]}
-      index={0}
+      snapPoints={["35%"]}
       enablePanDownToClose
       backdropComponent={renderBackdrop}
       backgroundStyle={{ backgroundColor: "white" }}
@@ -72,6 +72,14 @@ export const TodoActionSheet = forwardRef<
           <CustomText size="base" className="text-red-500 ml-3">
             삭제하기
           </CustomText>
+        </Pressable>
+        <Pressable onPress={onMakeRoutine}>
+          <View className="flex-row items-center px-6 py-4">
+            <Repeat size={20} color="#6B7280" />
+            <CustomText size="base" className="text-gray-600 ml-3">
+              루틴으로 만들기
+            </CustomText>
+          </View>
         </Pressable>
       </BottomSheetView>
     </BottomSheetModal>

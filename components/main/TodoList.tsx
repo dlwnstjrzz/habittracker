@@ -34,9 +34,17 @@ export default function TodoList() {
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const createCategoryRef = useRef<BottomSheetModal>(null);
   const reorderModalRef = useRef<BottomSheetModal>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
+    async function init() {
+      try {
+        await loadData();
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    init();
   }, []);
 
   useEffect(() => {
@@ -203,6 +211,12 @@ export default function TodoList() {
   };
 
   console.log("categories", categories);
+
+  // 로딩 중이거나 categories가 undefined인 경우 처리
+  if (isLoading || !categories) {
+    return <View className="flex-1 px-4" />;
+  }
+
   return (
     <View className="flex-1 px-4">
       {categories.map((category) => (

@@ -36,6 +36,7 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   setTodos: (todos) => set({ todos }),
   loadData: async () => {
     const data = await getCategories();
+    console.log("useTodoStore data", data);
     if (data) {
       set({ categories: data.categories, todos: data.todos });
     }

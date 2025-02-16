@@ -71,12 +71,12 @@ function Model({ modelUrl, animationUrl, textureUrl }: ModelProps) {
 
   return (
     <>
-      <ambientLight intensity={1} />
-      <directionalLight position={[5, 5, 5]} intensity={0.5} />
+      <ambientLight intensity={1.5} />
+      <directionalLight position={[5, 5, 5]} intensity={1} />
       <primitive
         ref={modelRef}
         object={fbxModel}
-        scale={0.08}
+        scale={0.12}
         position={[0, -3, 0]}
         rotation={[0, Math.PI, 0]} // 모델 방향 조정
       />

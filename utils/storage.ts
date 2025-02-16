@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { nanoid } from "nanoid";
 
 export interface Todo {
   id: string;
@@ -14,9 +15,24 @@ export interface Category {
   color: string;
 }
 
+export interface Routine {
+  id: string;
+  todoId: string;
+  text: string;
+  categoryId: string;
+  startDate: string;
+  endDate?: string;
+  frequency?: {
+    type: "daily" | "weekly" | "monthly";
+    days?: number[];
+    dates?: number[];
+  };
+}
+
 export interface StorageData {
   categories: Category[];
   todos: { [date: string]: Todo[] };
+  routines: Routine[];
 }
 
 const STORAGE_KEY = "todos_v1";
@@ -44,16 +60,29 @@ export const initialCategories: Category[] = [
 const initialData: StorageData = {
   categories: initialCategories,
   todos: {},
+  routines: [],
 };
 
 export async function getCategories(): Promise<StorageData | null> {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEY);
+    console.log("data", data);
     if (!data) {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(initialData));
       return initialData;
     }
     return JSON.parse(data);
+    // 기존 데이터를 파싱
+    // const parsedData = JSON.parse(data);
+    // console.log("parsedData", parsedData);
+    // // routines 배열이 없다면 추가
+    // if (!parsedData.routines) {
+    //   parsedData.routines = [];
+    //   // 업데이트된 데이터 저장
+    //   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(parsedData));
+    // }
+
+    // return parsedData;
   } catch (error) {
     console.error("Error getting categories:", error);
     return null;
@@ -106,4 +135,45 @@ export async function getCompletedTodosCount(date: string): Promise<number> {
   if (!data || !data.todos[date]) return 0;
 
   return data.todos[date].filter((todo) => todo.completed).length;
+}
+
+// 루틴 저장 함수
+export async function createRoutine(todo: Todo): Promise<void> {
+  const data = await getCategories();
+  if (!data) return;
+
+  const routine: Routine = {
+    id: nanoid(),
+    todoId: todo.id,
+    text: todo.text,
+    categoryId: todo.categoryId,
+    startDate: todo.date,
+  };
+
+  data.routines.push(routine);
+  await saveCategories(data);
+}
+
+// 할일 목록 조회 시 루틴 자동 추가
+export async function getTodosByDate(date: string): Promise<Todo[]> {
+  const data = await getCategories();
+  if (!data) return [];
+
+  const todos = data.todos[date] || [];
+  const routineTodos = data.routines
+    .filter((routine) => {
+      const startDate = new Date(routine.startDate);
+      const targetDate = new Date(date);
+      return targetDate >= startDate;
+    })
+    .map((routine) => ({
+      id: `${routine.id}-${date}`,
+      text: routine.text,
+      completed: false,
+      date,
+      categoryId: routine.categoryId,
+      isRoutine: true,
+    }));
+
+  return [...todos, ...routineTodos];
 }

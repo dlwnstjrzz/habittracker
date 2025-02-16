@@ -120,7 +120,7 @@ export const CreateCategoryModal = forwardRef<
         </View>
 
         {/* 하단 버튼 */}
-        <View className="mt-auto mb-6">
+        <View className="mt-4 mb-12">
           <Pressable
             onPress={handleSubmit}
             disabled={!title.trim()}
