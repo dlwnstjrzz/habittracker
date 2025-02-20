@@ -29,8 +29,9 @@ interface Category {
 export default function TodoList() {
   const { categories, todos, setCategories, setTodos, loadData, saveTodoData } =
     useTodoStore();
-  const { routines, saveRoutineData } = useRoutineStore();
+  const { loadRoutines, saveRoutineData } = useRoutineStore();
   const { selectedDate, setCompletedCount } = useSelectedDateStore();
+  const [routines, setRoutines] = useState<Routine[]>([]);
   const [isAddingTodo, setIsAddingTodo] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
@@ -41,10 +42,12 @@ export default function TodoList() {
   useEffect(() => {
     async function init() {
       await loadData();
+      const loadedRoutines = await loadRoutines();
+      setRoutines(loadedRoutines);
       setIsLoading(false);
     }
     init();
-  }, [loadData]);
+  }, [loadData, loadRoutines]);
 
   useEffect(() => {
     const completedCount =
@@ -62,6 +65,7 @@ export default function TodoList() {
       // 루틴 상태 업데이트
       console.log("updatedRoutines", updatedRoutines);
       await saveRoutineData(updatedRoutines);
+      setRoutines(updatedRoutines);
     } else {
       const updatedTodos = {
         ...todos,

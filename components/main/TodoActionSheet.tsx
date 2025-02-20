@@ -55,28 +55,28 @@ export const TodoActionSheet = forwardRef<
     return (
       <BottomSheetModal
         ref={ref}
-        snapPoints={["35%"]}
+        snapPoints={["40%"]}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         backgroundStyle={{ backgroundColor: "white" }}
       >
         <BottomSheetView className="flex-1 pt-2 pb-4">
           <Pressable
-            className="flex-row items-center px-6 py-4"
+            className="flex-row items-center px-6 py-4 rounded-lg bg-pink-100 mb-2"
             onPress={onEdit}
           >
-            <Pencil size={20} color="#6B7280" />
-            <CustomText size="base" className="text-gray-600 ml-3">
+            <Pencil size={20} color="#EC4899" />
+            <CustomText size="base" className="text-pink-600 ml-3">
               수정하기
             </CustomText>
           </Pressable>
           {!isBeforeToday && (
             <Pressable
-              className="flex-row items-center px-6 py-4"
+              className="flex-row items-center px-6 py-4 rounded-lg bg-blue-100 mb-2"
               onPress={onSetReminder}
             >
-              <Bell size={20} color="#6B7280" />
-              <CustomText size="base" className="text-gray-600 ml-3">
+              <Bell size={20} color="#3B82F6" />
+              <CustomText size="base" className="text-blue-600 ml-3">
                 알림 설정
               </CustomText>
             </Pressable>
@@ -84,7 +84,7 @@ export const TodoActionSheet = forwardRef<
           {!isRoutine ? (
             <>
               <Pressable
-                className="flex-row items-center px-6 py-4"
+                className="flex-row items-center px-6 py-4 rounded-lg bg-red-100 mb-2"
                 onPress={onDelete}
               >
                 <Trash2 size={20} color="#EF4444" />
@@ -92,23 +92,25 @@ export const TodoActionSheet = forwardRef<
                   삭제하기
                 </CustomText>
               </Pressable>
-              <Pressable onPress={onMakeRoutine}>
-                <View className="flex-row items-center px-6 py-4">
-                  <Repeat size={20} color="#6B7280" />
-                  <CustomText size="base" className="text-gray-600 ml-3">
-                    루틴으로 만들기
-                  </CustomText>
-                </View>
+              <Pressable
+                className="flex-row items-center px-6 py-4 rounded-lg bg-green-100"
+                onPress={onMakeRoutine}
+              >
+                <Repeat size={20} color="#10B981" />
+                <CustomText size="base" className="text-green-600 ml-3">
+                  루틴으로 만들기
+                </CustomText>
               </Pressable>
             </>
           ) : (
-            <Pressable onPress={onDeleteRoutine}>
-              <View className="flex-row items-center px-6 py-4">
-                <Trash2 size={20} color="#EF4444" />
-                <CustomText size="base" className="text-red-500 ml-3">
-                  루틴 삭제하기
-                </CustomText>
-              </View>
+            <Pressable
+              className="flex-row items-center px-6 py-4 rounded-lg bg-red-100"
+              onPress={onDeleteRoutine}
+            >
+              <Trash2 size={20} color="#EF4444" />
+              <CustomText size="base" className="text-red-500 ml-3">
+                루틴 삭제하기
+              </CustomText>
             </Pressable>
           )}
         </BottomSheetView>

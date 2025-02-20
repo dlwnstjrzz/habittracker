@@ -14,7 +14,7 @@ interface Routine {
 interface RoutineStore {
   routines: Routine[];
   addRoutine: (routine: Routine) => void;
-  loadRoutines: () => Promise<void>;
+  loadRoutines: () => Promise<Routine[]>;
   saveRoutineData: (routines: Routine[]) => Promise<void>;
 }
 
@@ -26,10 +26,14 @@ export const useRoutineStore = create<RoutineStore>((set) => ({
     try {
       const data = await AsyncStorage.getItem("routines");
       if (data) {
-        set({ routines: JSON.parse(data) });
+        const routines = JSON.parse(data);
+        set({ routines });
+        return routines;
       }
+      return [];
     } catch (error) {
       console.error("Failed to load routines:", error);
+      return [];
     }
   },
   saveRoutineData: async (routines) => {

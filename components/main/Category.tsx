@@ -62,7 +62,7 @@ export default function Category({
 }: CategoryProps) {
   const actionSheetRef = useRef<BottomSheetModal>(null);
   const editModalRef = useRef<BottomSheetModal>(null);
-  console.log("Category routines", routines);
+
   const handleEdit = () => {
     actionSheetRef.current?.dismiss();
     setTimeout(() => {

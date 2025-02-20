@@ -12,12 +12,7 @@ import {
   scheduleNotification,
   cancelNotification,
 } from "@/utils/notification";
-import { FlowerIcon } from "@/assets/icons/FlowerIcon";
-import { FlowerFillIcon } from "@/assets/icons/FlowerFillIcon";
-import { FourFlowerIcon } from "@/assets/icons/FourFlowerIcon";
-import { SakuraIcon } from "@/assets/icons/SakuraIcon";
-import { Lotus2Icon } from "@/assets/icons/Lotus2Icon";
-import { createRoutine, saveRoutine } from "@/utils/storage";
+import { saveRoutine } from "@/utils/storage";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { nanoid } from "nanoid";
 

@@ -108,12 +108,22 @@ export default function WeeklyDatePicker() {
 
   // 이전 주로 이동
   const handlePrevWeek = () => {
-    setCurrentWeekStart((prev) => subWeeks(prev, 1));
+    setCurrentWeekStart((prev) => {
+      const prevWeek = subWeeks(prev, 1);
+      const startOfPrevWeek = startOfWeek(prevWeek, { weekStartsOn: 1 });
+      setSelectedDate(format(startOfPrevWeek, "yyyy-MM-dd"));
+      return prevWeek;
+    });
   };
 
   // 다음 주로 이동
   const handleNextWeek = () => {
-    setCurrentWeekStart((prev) => addWeeks(prev, 1));
+    setCurrentWeekStart((prev) => {
+      const nextWeek = addWeeks(prev, 1);
+      const startOfNextWeek = startOfWeek(nextWeek, { weekStartsOn: 1 });
+      setSelectedDate(format(startOfNextWeek, "yyyy-MM-dd"));
+      return nextWeek;
+    });
   };
 
   // 오늘이 있는 주로 이동
