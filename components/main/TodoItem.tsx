@@ -15,6 +15,7 @@ import {
 import { saveRoutine } from "@/utils/storage";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { nanoid } from "nanoid";
+import { useCharacterStore } from "@/store/useCharacterStore";
 
 interface TodoItemProps {
   todo: {
@@ -53,8 +54,23 @@ export function TodoItem({
   const categoryColor = getColorValue(color);
 
   const addRoutine = useRoutineStore((state) => state.addRoutine);
-
+  const {
+    feedCharacter,
+    stage,
+    experience,
+    lastFedDate,
+    isEvolutionReady,
+    resetCharacter,
+  } = useCharacterStore();
+  // resetCharacter();
+  console.log("isEvolutionReady", isEvolutionReady);
+  console.log("stage", stage);
+  console.log("experience", experience);
+  console.log("lastFedDate", lastFedDate);
   const handleToggle = async () => {
+    if (!todo.completed) {
+      feedCharacter();
+    }
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
     onToggle();
   };
