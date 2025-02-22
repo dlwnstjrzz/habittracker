@@ -9,26 +9,15 @@ import animation from "../../../assets/models/animals/Anim_Rabby_Idle.fbx";
 import texture from "../../../assets/models/Textures/T_Rabby_01.png";
 import { useCharacterStore } from "@/store/useCharacterStore";
 import * as Haptics from "expo-haptics";
+import { ExperienceBar } from "./ExperienceBar";
 
 interface CharacterSectionProps {
   stage: number;
 }
 
 export default function CharacterSection({ stage }: CharacterSectionProps) {
-  const { isEvolutionReady, evolve } = useCharacterStore();
-
-  const getEvolutionMessage = () => {
-    if (!isEvolutionReady) return null;
-
-    switch (stage) {
-      case 2:
-        return "루미가 변하려고 해요! 터치해주세요!";
-      case 3:
-        return "루미가 최종 진화를 하려고 해요! 터치해주세요!";
-      default:
-        return null;
-    }
-  };
+  const { isEvolutionReady, evolve, currentExperience, level, needExperience } =
+    useCharacterStore();
 
   const handlePress = () => {
     if (isEvolutionReady) {
@@ -61,15 +50,45 @@ export default function CharacterSection({ stage }: CharacterSectionProps) {
 
   return (
     <View className="w-full h-[400px] bg-[#F6F5F9]">
+      <ExperienceBar
+        experience={currentExperience}
+        maxExperience={needExperience}
+        level={level}
+      />
       <View className="w-full h-full flex items-center relative justify-center">
         {isEvolutionReady && stage > 1 && (
           <Pressable
             className="absolute top-28 left-1/2 -translate-x-1/2 z-50"
             onPress={handlePress}
           >
-            <CustomText className="text-lg text-blue-500">
-              {getEvolutionMessage()}
-            </CustomText>
+            <View className="bg-white/90 px-6 py-3 rounded-full border-2 border-blue-400 shadow-lg">
+              <View className="absolute -top-2 left-1/2 -translate-x-1/2">
+                <CustomText className="text-yellow-500 text-lg">✨</CustomText>
+              </View>
+              <CustomText className="text-blue-500 text-center font-medium">
+                {stage === 2 ? (
+                  <>
+                    <CustomText className="text-lg">
+                      루미가 반짝반짝✨
+                    </CustomText>
+                    {"\n"}
+                    <CustomText className="text-base">
+                      터치해서 진화시켜주세요!
+                    </CustomText>
+                  </>
+                ) : (
+                  <>
+                    <CustomText className="text-lg">
+                      루미의 최종 진화가 시작돼요✨
+                    </CustomText>
+                    {"\n"}
+                    <CustomText className="text-base">
+                      터치해서 진화시켜주세요!
+                    </CustomText>
+                  </>
+                )}
+              </CustomText>
+            </View>
           </Pressable>
         )}
         {renderCharacter()}
