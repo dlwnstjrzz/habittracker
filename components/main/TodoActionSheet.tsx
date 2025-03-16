@@ -1,13 +1,8 @@
-import { View, Pressable } from "react-native";
-import { CustomText } from "../common/CustomText";
-import {
-  BottomSheetModal,
-  BottomSheetView,
-  BottomSheetBackdrop,
-} from "@gorhom/bottom-sheet";
-import { forwardRef, useCallback } from "react";
-import { Pencil, Trash2, Bell, Repeat } from "lucide-react-native";
-import { format, isBefore, startOfDay } from "date-fns";
+import { forwardRef } from "react";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { isBefore, startOfDay } from "date-fns";
+import { CommonModal, ActionButton } from "../common/CommonModal";
+import React from "react";
 
 interface TodoActionSheetProps {
   onEdit: () => void;
@@ -17,6 +12,7 @@ interface TodoActionSheetProps {
   onDeleteRoutine?: (id: string) => void;
   todoDate: string;
   isRoutine?: boolean;
+  routineId?: string;
 }
 
 export const TodoActionSheet = forwardRef<
@@ -32,89 +28,65 @@ export const TodoActionSheet = forwardRef<
       onDeleteRoutine,
       todoDate,
       isRoutine,
+      routineId,
     },
     ref
   ) => {
-    const renderBackdrop = useCallback(
-      (props) => (
-        <BottomSheetBackdrop
-          {...props}
-          appearsOnIndex={0}
-          disappearsOnIndex={-1}
-          pressBehavior="close"
-        />
-      ),
-      []
-    );
-
     const isBeforeToday = isBefore(
       startOfDay(new Date(todoDate)),
       startOfDay(new Date())
     );
 
+    const handleDeleteRoutine = () => {
+      if (onDeleteRoutine && routineId) {
+        onDeleteRoutine(routineId);
+      }
+    };
+
     return (
-      <BottomSheetModal
-        ref={ref}
-        snapPoints={["40%"]}
-        enablePanDownToClose
-        backdropComponent={renderBackdrop}
-        backgroundStyle={{ backgroundColor: "white" }}
-      >
-        <BottomSheetView className="flex-1 pt-2 pb-4">
-          <Pressable
-            className="flex-row items-center px-6 py-4 rounded-lg bg-pink-100 mb-2"
-            onPress={onEdit}
-          >
-            <Pencil size={20} color="#EC4899" />
-            <CustomText size="base" className="text-pink-600 ml-3">
-              수정하기
-            </CustomText>
-          </Pressable>
-          {!isBeforeToday && (
-            <Pressable
-              className="flex-row items-center px-6 py-4 rounded-lg bg-blue-100 mb-2"
-              onPress={onSetReminder}
-            >
-              <Bell size={20} color="#3B82F6" />
-              <CustomText size="base" className="text-blue-600 ml-3">
-                알림 설정
-              </CustomText>
-            </Pressable>
-          )}
-          {!isRoutine ? (
-            <>
-              <Pressable
-                className="flex-row items-center px-6 py-4 rounded-lg bg-red-100 mb-2"
-                onPress={onDelete}
-              >
-                <Trash2 size={20} color="#EF4444" />
-                <CustomText size="base" className="text-red-500 ml-3">
-                  삭제하기
-                </CustomText>
-              </Pressable>
-              <Pressable
-                className="flex-row items-center px-6 py-4 rounded-lg bg-green-100"
-                onPress={onMakeRoutine}
-              >
-                <Repeat size={20} color="#10B981" />
-                <CustomText size="base" className="text-green-600 ml-3">
-                  루틴으로 만들기
-                </CustomText>
-              </Pressable>
-            </>
-          ) : (
-            <Pressable
-              className="flex-row items-center px-6 py-4 rounded-lg bg-red-100"
-              onPress={onDeleteRoutine}
-            >
-              <Trash2 size={20} color="#EF4444" />
-              <CustomText size="base" className="text-red-500 ml-3">
-                루틴 삭제하기
-              </CustomText>
-            </Pressable>
-          )}
-        </BottomSheetView>
-      </BottomSheetModal>
+      <CommonModal ref={ref} title="할 일 관리" snapPoints={["40%"]}>
+        <ActionButton
+          label="수정하기"
+          iconName="pencil-circle"
+          iconFamily="MaterialCommunityIcons"
+          onPress={onEdit}
+        />
+
+        {!isBeforeToday && (
+          <ActionButton
+            label="알림 설정"
+            iconName="alarm"
+            iconFamily="MaterialIcons"
+            onPress={onSetReminder}
+          />
+        )}
+
+        {!isRoutine ? (
+          <>
+            <ActionButton
+              label="루틴으로 만들기"
+              iconName="refresh-circle"
+              iconFamily="Ionicons"
+              onPress={onMakeRoutine}
+            />
+            <ActionButton
+              label="삭제하기"
+              iconName="trash-bin"
+              iconFamily="Ionicons"
+              onPress={onDelete}
+              danger={true}
+            />
+          </>
+        ) : (
+          <ActionButton
+            label="루틴 삭제하기"
+            iconName="trash-bin"
+            iconFamily="Ionicons"
+            onPress={handleDeleteRoutine}
+            danger={true}
+          />
+        )}
+      </CommonModal>
     );
   }
 );

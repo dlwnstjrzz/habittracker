@@ -1,12 +1,9 @@
 import { View, Pressable, ScrollView } from "react-native";
 import { CustomText } from "../common/CustomText";
-import {
-  BottomSheetModal,
-  BottomSheetView,
-  BottomSheetBackdrop,
-} from "@gorhom/bottom-sheet";
-import { forwardRef, useCallback, useState, useRef, useEffect } from "react";
-import { Bell, X, Check } from "lucide-react-native";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { forwardRef, useState } from "react";
+import { CommonModal } from "../common/CommonModal";
+import React from "react";
 
 interface ReminderModalProps {
   onSubmit: (time: Date | null) => void;
@@ -34,18 +31,6 @@ export const ReminderModal = forwardRef<BottomSheetModal, ReminderModalProps>(
         : now.getMinutes().toString().padStart(2, "0")
     );
 
-    const renderBackdrop = useCallback(
-      (props) => (
-        <BottomSheetBackdrop
-          {...props}
-          appearsOnIndex={0}
-          disappearsOnIndex={-1}
-          pressBehavior="close"
-        />
-      ),
-      []
-    );
-
     const handleSubmit = () => {
       // 현재 날짜의 로컬 시간으로 Date 객체 생성
       const now = new Date();
@@ -70,118 +55,88 @@ export const ReminderModal = forwardRef<BottomSheetModal, ReminderModalProps>(
 
       console.log("Local time:", scheduledTime.toLocaleString());
       onSubmit(scheduledTime);
-      (ref as any).current?.dismiss();
+      if (ref && typeof ref !== "function" && ref.current) {
+        ref.current.dismiss();
+      }
     };
 
     return (
-      <BottomSheetModal
-        ref={ref}
-        snapPoints={["50%"]}
-        index={0}
-        enablePanDownToClose
-        backdropComponent={renderBackdrop}
-        backgroundStyle={{ backgroundColor: "white" }}
-      >
-        <BottomSheetView className="flex-1 pt-2 pb-4">
-          {/* 헤더 */}
-          <View className="flex-row items-center justify-between px-6 pb-4">
-            <CustomText size="lg" weight="bold" className="text-gray-900">
-              알림 시간 설정
+      <CommonModal ref={ref} title="알림 시간 설정" snapPoints={["50%"]}>
+        {/* 시간 선택 */}
+        <View className="py-6">
+          <View className="flex-row justify-center items-center bg-gray-50 rounded-2xl p-4">
+            {/* 시간 선택 */}
+            <View className="flex-1">
+              <ScrollView className="h-40" showsVerticalScrollIndicator={false}>
+                {HOURS.map((hour) => (
+                  <Pressable
+                    key={hour}
+                    className={`h-10 items-center justify-center rounded-xl mx-2 ${
+                      selectedHour === hour ? "bg-pink-100" : ""
+                    }`}
+                    onPress={() => setSelectedHour(hour)}
+                  >
+                    <CustomText
+                      size="xl"
+                      weight={selectedHour === hour ? "bold" : "regular"}
+                      className={
+                        selectedHour === hour
+                          ? "text-pink-500"
+                          : "text-gray-400"
+                      }
+                    >
+                      {hour}
+                    </CustomText>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+
+            <CustomText size="xl" weight="bold" className="text-gray-400 mx-2">
+              :
             </CustomText>
-            <Pressable
-              onPress={() => (ref as any).current?.dismiss()}
-              className="w-8 h-8 items-center justify-center rounded-full bg-gray-50"
-            >
-              <X size={20} color="#6B7280" />
-            </Pressable>
-          </View>
 
-          {/* 시간 선택 */}
-          <View className="px-6 py-6">
-            <View className="flex-row justify-center items-center bg-gray-50 rounded-2xl p-4">
-              {/* 시간 선택 */}
-              <View className="flex-1">
-                <ScrollView
-                  className="h-40"
-                  showsVerticalScrollIndicator={false}
-                >
-                  {HOURS.map((hour) => (
-                    <Pressable
-                      key={hour}
-                      className={`h-10 items-center justify-center rounded-xl mx-2 ${
-                        selectedHour === hour ? "bg-pink-100" : ""
-                      }`}
-                      onPress={() => setSelectedHour(hour)}
+            {/* 분 선택 */}
+            <View className="flex-1">
+              <ScrollView className="h-40" showsVerticalScrollIndicator={false}>
+                {MINUTES.map((minute) => (
+                  <Pressable
+                    key={minute}
+                    className={`h-10 items-center justify-center rounded-xl mx-2 ${
+                      selectedMinute === minute ? "bg-pink-100" : ""
+                    }`}
+                    onPress={() => setSelectedMinute(minute)}
+                  >
+                    <CustomText
+                      size="xl"
+                      weight={selectedMinute === minute ? "bold" : "regular"}
+                      className={
+                        selectedMinute === minute
+                          ? "text-pink-500"
+                          : "text-gray-400"
+                      }
                     >
-                      <CustomText
-                        size="xl"
-                        weight={selectedHour === hour ? "bold" : "regular"}
-                        className={
-                          selectedHour === hour
-                            ? "text-pink-500"
-                            : "text-gray-400"
-                        }
-                      >
-                        {hour}
-                      </CustomText>
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              </View>
-
-              <CustomText
-                size="xl"
-                weight="bold"
-                className="text-gray-400 mx-2"
-              >
-                :
-              </CustomText>
-
-              {/* 분 선택 */}
-              <View className="flex-1">
-                <ScrollView
-                  className="h-40"
-                  showsVerticalScrollIndicator={false}
-                >
-                  {MINUTES.map((minute) => (
-                    <Pressable
-                      key={minute}
-                      className={`h-10 items-center justify-center rounded-xl mx-2 ${
-                        selectedMinute === minute ? "bg-pink-100" : ""
-                      }`}
-                      onPress={() => setSelectedMinute(minute)}
-                    >
-                      <CustomText
-                        size="xl"
-                        weight={selectedMinute === minute ? "bold" : "regular"}
-                        className={
-                          selectedMinute === minute
-                            ? "text-pink-500"
-                            : "text-gray-400"
-                        }
-                      >
-                        {minute}
-                      </CustomText>
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              </View>
+                      {minute}
+                    </CustomText>
+                  </Pressable>
+                ))}
+              </ScrollView>
             </View>
           </View>
+        </View>
 
-          {/* 확인 버튼 */}
-          <View className="px-6 mt-auto">
-            <Pressable
-              className="w-full py-4 rounded-2xl bg-pink-400 items-center"
-              onPress={handleSubmit}
-            >
-              <CustomText size="base" weight="bold" className="text-white">
-                완료
-              </CustomText>
-            </Pressable>
-          </View>
-        </BottomSheetView>
-      </BottomSheetModal>
+        {/* 확인 버튼 */}
+        <View className="mt-auto">
+          <Pressable
+            className="w-full py-4 rounded-2xl bg-pink-400 items-center"
+            onPress={handleSubmit}
+          >
+            <CustomText size="base" weight="bold" className="text-white">
+              완료
+            </CustomText>
+          </Pressable>
+        </View>
+      </CommonModal>
     );
   }
 );
