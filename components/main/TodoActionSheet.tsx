@@ -14,7 +14,7 @@ interface TodoActionSheetProps {
   onDelete: () => void;
   onSetReminder: () => void;
   onMakeRoutine: () => void;
-  onDeleteRoutine?: () => void;
+  onDeleteRoutine?: (id: string) => void;
   todoDate: string;
   isRoutine?: boolean;
 }

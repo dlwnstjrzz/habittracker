@@ -14,7 +14,7 @@ import CharacterSection from "@/components/main/character/CharacterSection";
 
 function MainScreen() {
   const { stage } = useCharacterStore();
-
+  // clearStorage();
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}

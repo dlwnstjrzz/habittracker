@@ -12,7 +12,6 @@ import {
   scheduleNotification,
   cancelNotification,
 } from "@/utils/notification";
-import { saveRoutine } from "@/utils/storage";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { nanoid } from "nanoid";
 import { useCharacterStore } from "@/store/useCharacterStore";
@@ -54,15 +53,8 @@ export function TodoItem({
   const categoryColor = getColorValue(color);
 
   const addRoutine = useRoutineStore((state) => state.addRoutine);
-  const {
-    feedCharacter,
-    stage,
-    experience,
-    lastFedDate,
-    isEvolutionReady,
-    resetCharacter,
-  } = useCharacterStore();
-  // resetCharacter();
+  const { feedCharacter, stage, experience, lastFedDate, isEvolutionReady } =
+    useCharacterStore();
   console.log("isEvolutionReady", isEvolutionReady);
   console.log("stage", stage);
   console.log("experience", experience);
@@ -151,30 +143,25 @@ export function TodoItem({
     }
   };
 
-  const handleMakeRoutine = async () => {
+  const handleMakeRoutine = () => {
     try {
-      const routine = {
-        id: nanoid(),
-        todoId: todo.id,
+      const createRoutineFromTodo =
+        useRoutineStore.getState().createRoutineFromTodo;
+
+      // 루틴 생성
+      createRoutineFromTodo({
+        id: todo.id,
         text: todo.text,
         categoryId: todo.categoryId,
-        startDate: todo.date,
-        frequency: "daily",
-        isRoutine: true,
-        completed: false,
-      };
+        date: todo.date,
+      });
 
-      // 루틴 저장
-      await saveRoutine(routine);
-
-      // 전역 상태 업데이트
-      addRoutine(routine);
+      // 기존 할일 삭제
+      onDelete(todo.id);
 
       actionSheetRef.current?.dismiss();
-      // 선택적: 성공 메시지 표시
     } catch (error) {
       console.error("Error creating routine:", error);
-      // 선택적: 에러 메시지 표시
     }
   };
 
@@ -260,7 +247,11 @@ export function TodoItem({
         onMakeRoutine={handleMakeRoutine}
         todoDate={todo.date}
         isRoutine={todo.isRoutine}
-        onDeleteRoutine={onDeleteRoutine}
+        onDeleteRoutine={
+          todo.isRoutine && onDeleteRoutine
+            ? () => onDeleteRoutine(todo.id)
+            : undefined
+        }
       />
 
       <ReminderModal

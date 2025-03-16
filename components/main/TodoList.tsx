@@ -29,9 +29,10 @@ interface Category {
 export default function TodoList() {
   const { categories, todos, setCategories, setTodos, loadData, saveTodoData } =
     useTodoStore();
-  const { loadRoutines, saveRoutineData } = useRoutineStore();
   const { selectedDate, setCompletedCount } = useSelectedDateStore();
-  const [routines, setRoutines] = useState<Routine[]>([]);
+  const { getRoutinesForDate, toggleRoutineCompletion, deleteRoutine } =
+    useRoutineStore();
+
   const [isAddingTodo, setIsAddingTodo] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
@@ -42,30 +43,21 @@ export default function TodoList() {
   useEffect(() => {
     async function init() {
       await loadData();
-      const loadedRoutines = await loadRoutines();
-      setRoutines(loadedRoutines);
       setIsLoading(false);
     }
     init();
-  }, [loadData, loadRoutines]);
+  }, [loadData]);
 
   useEffect(() => {
     const completedCount =
       todos[selectedDate]?.filter((todo) => todo.completed).length || 0;
     setCompletedCount(completedCount);
-  }, [selectedDate, todos]);
+  }, [selectedDate, todos, setCompletedCount]);
 
   const handleTodoToggle = async (todoId: string, isRoutine: boolean) => {
     if (isRoutine) {
-      const updatedRoutines = routines.map((routine) =>
-        routine.id === todoId
-          ? { ...routine, completed: !routine.completed }
-          : routine
-      );
-      // 루틴 상태 업데이트
-      console.log("updatedRoutines", updatedRoutines);
-      await saveRoutineData(updatedRoutines);
-      setRoutines(updatedRoutines);
+      // 루틴 완료 상태 토글 (선택된 날짜 전달)
+      toggleRoutineCompletion(todoId, selectedDate);
     } else {
       const updatedTodos = {
         ...todos,
@@ -78,6 +70,11 @@ export default function TodoList() {
     }
   };
 
+  // 루틴 삭제 처리 함수 추가
+  const handleDeleteRoutine = (routineId: string) => {
+    deleteRoutine(routineId);
+  };
+
   // 선택된 날짜의 todos를 카테고리별로 그룹화
   const getTodosByCategory = useCallback(
     (categoryId: string) => {
@@ -88,20 +85,13 @@ export default function TodoList() {
   );
 
   const handleCreateTodo = async (categoryId: string, newTodo: Todo) => {
-    const updatedCategories = categories.map((category) =>
-      category.id === categoryId
-        ? {
-            ...category,
-            todos: {
-              ...category.todos,
-              [selectedDate]: [...category.todos[selectedDate], newTodo],
-            },
-          }
-        : category
-    );
+    const updatedTodos = {
+      ...todos,
+      [selectedDate]: [...(todos[selectedDate] || []), newTodo],
+    };
 
-    setCategories(updatedCategories);
-    await saveTodoData({ categories: updatedCategories, todos });
+    setTodos(updatedTodos);
+    await saveTodoData({ categories, todos: updatedTodos });
   };
 
   const handleEditTodo = async (todoId: string, newText: string) => {
@@ -209,7 +199,7 @@ export default function TodoList() {
       setCategories(reorderedCategories);
       saveTodoData({ categories: reorderedCategories, todos });
     },
-    [todos]
+    [todos, setCategories, saveTodoData]
   );
 
   const handleSetReminder = async (todoId: string, time?: string | null) => {
@@ -219,23 +209,22 @@ export default function TodoList() {
         todo.id === todoId ? { ...todo, reminderTime: time } : todo
       ),
     };
-    console.log("updatedTodos", updatedTodos);
     setTodos(updatedTodos);
     await saveTodoData({ categories, todos: updatedTodos });
   };
 
-  console.log("categories", categories);
+  // 선택된 날짜에 표시할 루틴 가져오기
+  const routinesForSelectedDate = getRoutinesForDate(selectedDate);
 
-  const routinesForSelectedDate = routines
-    .filter((routine) => {
-      const startDate = new Date(routine.startDate);
-      const targetDate = new Date(selectedDate);
-      return targetDate >= startDate;
-    })
-    .map((routine) => ({
-      ...routine,
-      isRoutine: true, // 루틴임을 표시
-    }));
+  // 카테고리별 루틴 필터링
+  const getRoutinesByCategory = useCallback(
+    (categoryId: string) => {
+      return routinesForSelectedDate.filter(
+        (routine) => routine.categoryId === categoryId
+      );
+    },
+    [routinesForSelectedDate]
+  );
 
   // 로딩 중이거나 categories가 undefined인 경우 처리
   if (isLoading || !categories) {
@@ -249,16 +238,13 @@ export default function TodoList() {
           key={category.id}
           category={category}
           todos={getTodosByCategory(category.id)}
-          routines={routinesForSelectedDate.filter(
-            (routine) => routine.categoryId === category.id
-          )}
-          onTodoToggle={(todoId, isRoutine) =>
-            handleTodoToggle(todoId, isRoutine)
-          }
+          routines={getRoutinesByCategory(category.id)}
+          onTodoToggle={handleTodoToggle}
           onTodoCreate={(todo) => handleCreateTodo(category.id, todo)}
           onTodoEdit={(todoId, newText) => handleEditTodo(todoId, newText)}
           onTodoDelete={(todoId) => handleDeleteTodo(todoId)}
           onTodoSetReminder={handleSetReminder}
+          onDeleteRoutine={handleDeleteRoutine}
           onUpdate={handleUpdateCategory}
           onDelete={handleDeleteCategory}
           onReorder={() => {

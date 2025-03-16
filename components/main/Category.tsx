@@ -16,6 +16,7 @@ interface Todo {
   completed: boolean;
   date: string;
   categoryId: string;
+  reminderTime?: string | null;
 }
 
 interface Category {
@@ -26,21 +27,30 @@ interface Category {
 
 interface Routine {
   id: string;
-  title: string;
-  completed: boolean;
-  date: string;
+  text: string;
   categoryId: string;
+  startDate: string;
+  endDate?: string;
+  completed: boolean;
+  completedDates: { [date: string]: boolean };
+  frequency: {
+    type: "daily" | "weekly" | "monthly";
+    days?: number[];
+    dates?: number[];
+  };
+  lastCompletedDate?: string;
 }
 
 interface CategoryProps {
   category: Category;
   todos: Todo[];
   routines: Routine[];
-  onTodoToggle: (todoId: string) => void;
+  onTodoToggle: (todoId: string, isRoutine: boolean) => void;
   onTodoCreate: (todo: Todo) => void;
   onTodoEdit: (todoId: string, newText: string) => void;
   onTodoDelete: (todoId: string) => void;
   onTodoSetReminder: (todoId: string, time?: string | null) => void;
+  onDeleteRoutine: (routineId: string) => void;
   onUpdate: (categoryId: string, updates: Partial<Category>) => void;
   onDelete: (categoryId: string) => void;
   onReorder: () => void;
@@ -55,6 +65,7 @@ export default function Category({
   onTodoEdit,
   onTodoDelete,
   onTodoSetReminder,
+  onDeleteRoutine,
   onUpdate,
   onDelete,
   onReorder,
@@ -114,9 +125,12 @@ export default function Category({
         {todos.map((todo) => (
           <TodoItem
             key={todo.id}
-            todo={todo}
+            todo={{
+              ...todo,
+              isRoutine: false,
+            }}
             color={category.color}
-            onToggle={() => onTodoToggle(todo.id, todo.isRoutine)}
+            onToggle={() => onTodoToggle(todo.id, false)}
             onEdit={onTodoEdit}
             onDelete={onTodoDelete}
             onSetReminder={onTodoSetReminder}
@@ -125,12 +139,20 @@ export default function Category({
         {routines.map((routine) => (
           <TodoItem
             key={routine.id}
-            todo={routine}
+            todo={{
+              id: routine.id,
+              text: routine.text,
+              completed: routine.completed,
+              date: routine.startDate,
+              categoryId: routine.categoryId,
+              isRoutine: true,
+            }}
             color={category.color}
-            onToggle={() => onTodoToggle(routine.id, routine.isRoutine)}
+            onToggle={() => onTodoToggle(routine.id, true)}
             onEdit={onTodoEdit}
             onDelete={onTodoDelete}
             onSetReminder={onTodoSetReminder}
+            onDeleteRoutine={onDeleteRoutine}
           />
         ))}
         {renderAddTodo()}
