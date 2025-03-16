@@ -170,34 +170,37 @@ export function TodoItem({
   if (isEditing) {
     return (
       <View className="flex-row items-center justify-between py-3 px-3">
-        <TextInput
-          value={editText}
-          onChangeText={setEditText}
-          className="flex-1 border-b-2 px-1 py-2"
-          style={{
-            fontSize: 14,
-            fontFamily: "SpoqaHanSansNeo-Regular",
-            borderBottomColor: categoryColor,
-          }}
-          autoFocus
-          returnKeyType="done"
-          onSubmitEditing={handleEditSubmit}
-          onBlur={() => {
-            setIsEditing(false);
-            setEditText(localText);
-          }}
-        />
+        <View className="flex-1 max-w-[85%]">
+          <TextInput
+            value={editText}
+            onChangeText={setEditText}
+            className="px-1 py-2 border-b-2"
+            style={{
+              fontSize: 14,
+              fontFamily: "SpoqaHanSansNeo-Regular",
+              borderBottomColor: categoryColor,
+              textAlignVertical: "top",
+            }}
+            multiline
+            numberOfLines={3}
+            autoFocus
+            returnKeyType="done"
+            blurOnSubmit={true}
+            onSubmitEditing={handleEditSubmit}
+            onBlur={() => {
+              setIsEditing(false);
+              setEditText(localText);
+            }}
+          />
+        </View>
       </View>
     );
   }
 
   return (
     <View className="flex-row items-center justify-between py-3 px-3">
-      <Pressable
-        className="flex-row items-center flex-1"
-        onPress={handleToggle}
-      >
-        <View className="mr-2" style={{ position: "relative" }}>
+      <Pressable className="flex-row items-start flex-1" onPress={handleToggle}>
+        <View className="mr-2 mt-0.5" style={{ position: "relative" }}>
           <View
             className="w-6 h-6 rounded-md mr-3 border-2 items-center justify-center"
             style={{
@@ -210,14 +213,14 @@ export function TodoItem({
             )}
           </View>
         </View>
-        <View>
-          <View className="flex-row items-center">
+        <View className="flex-1 pr-2">
+          <View className="flex-row items-center flex-wrap">
             <CustomText
               size="sm"
               weight="regular"
               className={`${
                 todo.completed ? "text-gray-400 line-through" : "text-gray-700"
-              }`}
+              } flex-shrink`}
             >
               {localText}
             </CustomText>
