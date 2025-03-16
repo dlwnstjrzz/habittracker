@@ -1,4 +1,4 @@
-import { View, Pressable } from "react-native";
+import { View, Pressable, StyleSheet } from "react-native";
 import { CustomText } from "@/components/common/CustomText";
 import Animated, {
   useAnimatedStyle,
@@ -20,10 +20,11 @@ export function EvolutionMessage({
   subMessage,
   onPress,
 }: EvolutionMessageProps) {
-  // 살짝 둥둥 떠있는 느낌의 애니메이션
+  // 애니메이션 값
   const translateY = useSharedValue(0);
 
   useEffect(() => {
+    // 위아래 움직임 애니메이션
     translateY.value = withRepeat(
       withSequence(
         withTiming(-3, { duration: 1500 }),
@@ -41,38 +42,50 @@ export function EvolutionMessage({
   });
 
   return (
-    <Pressable
-      className="absolute top-20 left-1/2 -translate-x-1/2 z-50"
-      onPress={onPress}
-    >
-      <Animated.View
-        style={animatedStyle}
-        className="bg-white/95 px-5 py-3 rounded-xl border border-pink-200 shadow-sm"
-      >
-        <View className="absolute -top-2 left-1/2 -translate-x-1/2">
-          <CustomText className="text-lg">✨</CustomText>
-        </View>
+    <Pressable style={styles.container} onPress={onPress}>
+      <Animated.View style={[styles.messageBox, animatedStyle]}>
+        <CustomText weight="bold" size="base" style={styles.mainText}>
+          {message}
+        </CustomText>
 
-        <View className="items-center">
-          <CustomText
-            weight="bold"
-            size="base"
-            className="text-rose-500 text-center mb-0.5"
-          >
-            {message}
+        {subMessage && (
+          <CustomText weight="medium" size="sm" style={styles.subText}>
+            {subMessage}
           </CustomText>
-
-          {subMessage && (
-            <CustomText
-              weight="medium"
-              size="sm"
-              className="text-pink-400 text-center"
-            >
-              {subMessage}
-            </CustomText>
-          )}
-        </View>
+        )}
       </Animated.View>
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    top: 64,
+    left: "50%",
+    transform: [{ translateX: -100 }],
+    zIndex: 50,
+    width: 200,
+  },
+  messageBox: {
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+    alignItems: "center",
+  },
+  mainText: {
+    color: "#3182F7",
+    textAlign: "center",
+    marginBottom: 2,
+  },
+  subText: {
+    color: "#666666",
+    textAlign: "center",
+  },
+});

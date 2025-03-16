@@ -28,7 +28,7 @@ export interface Routine {
 export interface StorageData {
   categories: Category[];
   todos: { [date: string]: Todo[] };
-  routines: Routine[];
+  routines?: Routine[];
 }
 
 const STORAGE_KEY = "todos_v1";
@@ -112,6 +112,16 @@ export async function clearStorage() {
     console.log("Storage cleared");
   } catch (error) {
     console.error("Error clearing storage:", error);
+  }
+}
+
+// 온보딩 상태 초기화 함수 추가
+export async function resetOnboarding() {
+  try {
+    await AsyncStorage.removeItem("onboarding_completed");
+    console.log("Onboarding status reset");
+  } catch (error) {
+    console.error("Error resetting onboarding status:", error);
   }
 }
 

@@ -13,13 +13,14 @@ interface ModelProps {
   modelUrl: string;
   animationUrl: string;
   textureUrl: string;
+  rotation?: number;
 }
 
 function Model({
   modelUrl,
   animationUrl,
   textureUrl,
-  revolutionText,
+  rotation = 0,
 }: ModelProps) {
   const fbxModel = useLoader(FBXLoader, modelUrl);
   const fbxAnimation = useLoader(FBXLoader, animationUrl);
@@ -52,7 +53,7 @@ function Model({
 
         // 메시 최적화 설정
         mesh.frustumCulled = true;
-        mesh.matrixAutoUpdate = false;
+        mesh.matrixAutoUpdate = true; // 애니메이션을 위해 true로 변경
       }
     });
 
@@ -82,8 +83,8 @@ function Model({
         ref={modelRef}
         object={fbxModel}
         scale={0.12}
-        position={[0, -3, 0]}
-        rotation={[0, Math.PI, 0]} // 모델 방향 조정
+        position={[0, -2, 0]}
+        rotation={[0, rotation, 0]}
       />
     </>
   );
@@ -93,15 +94,17 @@ export function Character3D({
   modelUrl,
   animationUrl,
   textureUrl,
+  rotation,
 }: {
   modelUrl: string;
   animationUrl: string;
   textureUrl: string;
+  rotation?: number;
 }) {
   const [OrbitControls, events] = useControls();
 
   return (
-    <View className="w-full h-[400px]" {...events}>
+    <View className="w-full h-full" {...events}>
       <Canvas
         events={null}
         onCreated={(state) => {
@@ -121,7 +124,7 @@ export function Character3D({
           antialias: false,
           alpha: false,
         }}
-        frameloop="demand"
+        frameloop="always" // 항상 애니메이션 프레임 실행
       >
         <color attach="background" args={["#F6F5F9"]} />
         <OrbitControls enableDamping={false} enableZoom={false} />
@@ -130,6 +133,7 @@ export function Character3D({
             modelUrl={modelUrl}
             animationUrl={animationUrl}
             textureUrl={textureUrl}
+            rotation={rotation}
           />
         </Suspense>
       </Canvas>

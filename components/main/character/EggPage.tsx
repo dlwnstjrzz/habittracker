@@ -11,7 +11,6 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { EvolutionMessage } from "./EvolutionMessage";
 
 export default function EggPage() {
   const { isEvolutionReady, evolve } = useCharacterStore();
@@ -73,13 +72,6 @@ export default function EggPage() {
   return (
     <View className="flex-1 items-center justify-center">
       <View className="items-center relative">
-        {isEvolutionReady && (
-          <EvolutionMessage
-            message="크리스탈을 터치해보세요!"
-            subMessage="누가 나올까요?"
-            onPress={handlePress}
-          />
-        )}
         <Pressable onPress={handlePress}>
           <Animated.Image
             source={require("@/assets/icons/crystal.png")}

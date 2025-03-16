@@ -69,7 +69,7 @@ export function ExperienceBar({
     transform: [
       { scale: levelUpButtonScale.value },
       { translateY: buttonFloat.value },
-    ],
+    ] as any,
     display: canLevelUp ? "flex" : "none",
   }));
 

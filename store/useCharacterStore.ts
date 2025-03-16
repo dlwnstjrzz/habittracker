@@ -18,6 +18,7 @@ interface CharacterState {
   evolve: () => void;
   hatchEgg: () => void;
   completeLevelUp: () => void;
+  resetCharacter: () => void; // 캐릭터 초기화 함수 추가
 }
 
 export const useCharacterStore = create<CharacterState>()(
@@ -32,7 +33,7 @@ export const useCharacterStore = create<CharacterState>()(
       feedCount: 0,
       isEvolutionReady: false,
       isLevelingUp: false,
-      canLevelUp: false, // 초기값은 false
+      canLevelUp: false,
       feedCharacter: () => {
         const {
           stage,

@@ -1,7 +1,7 @@
 import { View, ScrollView } from "react-native";
 import { CustomText } from "../common/CustomText";
 import { getCategories } from "@/utils/storage";
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, Key } from "react";
 import { format } from "date-fns";
 import { getColorValue } from "@/constants/Colors";
 import { useTodoStore } from "@/store/useTodoStore";
@@ -13,7 +13,7 @@ interface Category {
 }
 
 interface HeatmapProps {
-  data: {
+  data?: {
     categoryId: string;
     date: string;
     completionRate: number; // 0-1 사이의 값
@@ -66,12 +66,9 @@ function getMonthDates(viewMode: "month" | "year") {
       return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`; // YYYY-MM-DD
     });
   } else {
-    const dates: string[][] = [];
-    const monthLabels: {
-      label: string;
-      weekIndex: number;
-    }[] = [];
-    let currentWeek: string[] = [];
+    const dates = [];
+    const monthLabels = [];
+    let currentWeek = [];
     let weekIndex = 0;
     let lastMonth = -1;
 
@@ -202,7 +199,7 @@ function processDataForHeatmap(todos: Record<string, TodoData[]>) {
 export function CategoryHeatmap({ viewMode }: HeatmapProps) {
   const { categories, todos, loadData } = useTodoStore();
   const [heatmapData, setHeatmapData] = useState<HeatmapProps["data"]>([]);
-  const monthDates = getMonthDates(viewMode);
+  const monthDatesData = getMonthDates(viewMode);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const scrollViewRefs = useRef<{ [key: string]: ScrollView | null }>({});
 
@@ -264,27 +261,30 @@ export function CategoryHeatmap({ viewMode }: HeatmapProps) {
             {/* 히트맵 그리드 */}
             {viewMode === "month" ? (
               <View className="flex-row flex-wrap">
-                {monthDates.map((dateStr) => {
-                  const dayData = categoryData.find((d) => d.date === dateStr);
-                  const opacity = dayData
-                    ? getOpacityValue(
-                        getOpacityByCompletion(dayData.completionRate)
-                      )
-                    : 0.1;
+                {Array.isArray(monthDatesData) &&
+                  monthDatesData.map((dateStr: Key) => {
+                    const dayData = categoryData.find(
+                      (d) => d.date === dateStr
+                    );
+                    const opacity = dayData
+                      ? getOpacityValue(
+                          getOpacityByCompletion(dayData.completionRate)
+                        )
+                      : 0.1;
 
-                  return (
-                    <View
-                      key={dateStr}
-                      className="m-[1px] rounded-[4px]"
-                      style={{
-                        width: 18,
-                        height: 18,
-                        backgroundColor: categoryColor,
-                        opacity,
-                      }}
-                    />
-                  );
-                })}
+                    return (
+                      <View
+                        key={dateStr}
+                        className="m-[1px] rounded-[4px]"
+                        style={{
+                          width: 18,
+                          height: 18,
+                          backgroundColor: categoryColor,
+                          opacity,
+                        }}
+                      />
+                    );
+                  })}
               </View>
             ) : (
               <ScrollView
@@ -306,70 +306,72 @@ export function CategoryHeatmap({ viewMode }: HeatmapProps) {
                 <View>
                   {/* 월 라벨 */}
                   <View className="flex-row mb-2 relative h-5">
-                    {monthDates.monthLabels.map((monthLabel) => (
-                      <View
-                        key={monthLabel.label}
-                        style={{
-                          position: "absolute",
-                          left: monthLabel.weekIndex * 20, // 각 주의 너비(18 + 2)
-                        }}
-                      >
-                        <CustomText
-                          size="xs"
-                          weight="medium"
-                          className="opacity-60"
-                          style={{ color: categoryColor }}
+                    {!Array.isArray(monthDatesData) &&
+                      monthDatesData.monthLabels.map((monthLabel) => (
+                        <View
+                          key={monthLabel.label}
+                          style={{
+                            position: "absolute",
+                            left: monthLabel.weekIndex * 20, // 각 주의 너비(18 + 2)
+                          }}
                         >
-                          {monthLabel.label}
-                        </CustomText>
-                      </View>
-                    ))}
+                          <CustomText
+                            size="xs"
+                            weight="medium"
+                            className="opacity-60"
+                            style={{ color: categoryColor }}
+                          >
+                            {monthLabel.label}
+                          </CustomText>
+                        </View>
+                      ))}
                   </View>
 
                   {/* 히트맵 그리드 */}
                   <View className="flex-row">
-                    {monthDates.dates.map((week, weekIndex) => (
-                      <View key={weekIndex} className="flex-col">
-                        {week.map((dateStr, dayIndex) => {
-                          // 빈 문자열이면 투명한 셀 렌더링
-                          if (!dateStr) {
+                    {!Array.isArray(monthDatesData) &&
+                      monthDatesData.dates.map((week, weekIndex) => (
+                        <View key={weekIndex} className="flex-col">
+                          {week.map((dateStr, dayIndex) => {
+                            // 빈 문자열이면 투명한 셀 렌더링
+                            if (!dateStr) {
+                              return (
+                                <View
+                                  key={`empty-${weekIndex}-${dayIndex}`}
+                                  className="m-[1px] rounded-[3px]"
+                                  style={{
+                                    width: 18,
+                                    height: 18,
+                                    backgroundColor: "transparent",
+                                  }}
+                                />
+                              );
+                            }
+
+                            const dayData = categoryData.find(
+                              (d) => d.date === dateStr
+                            );
+                            const opacity = dayData
+                              ? getOpacityValue(
+                                  getOpacityByCompletion(dayData.completionRate)
+                                )
+                              : 0.1;
+
                             return (
                               <View
-                                key={`empty-${weekIndex}-${dayIndex}`}
+                                key={dateStr}
                                 className="m-[1px] rounded-[3px]"
                                 style={{
                                   width: 18,
                                   height: 18,
-                                  backgroundColor: "transparent",
+                                  backgroundColor: categoryColor,
+                                  opacity,
                                 }}
                               />
                             );
-                          }
-
-                          const dayData = categoryData.find(
-                            (d) => d.date === dateStr
-                          );
-                          const opacity = dayData
-                            ? getOpacityValue(
-                                getOpacityByCompletion(dayData.completionRate)
-                              )
-                            : 0.1;
-
-                          return (
-                            <View
-                              key={dateStr}
-                              className="m-[1px] rounded-[3px]"
-                              style={{
-                                width: 18,
-                                height: 18,
-                                backgroundColor: categoryColor,
-                                opacity,
-                              }}
-                            />
-                          );
-                        })}
-                      </View>
-                    ))}
+                          })}
+                        </View>
+                      ))}
                   </View>
                 </View>
               </ScrollView>
