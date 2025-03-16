@@ -1,7 +1,7 @@
 import { View, Pressable, TextInput } from "react-native";
 import { CustomText } from "../common/CustomText";
 import * as Haptics from "expo-haptics";
-import { Check, MoreHorizontal, Bell } from "lucide-react-native";
+import { Check, MoreHorizontal, Bell, Repeat } from "lucide-react-native";
 import { useRef, useState, useEffect } from "react";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { TodoActionSheet } from "./TodoActionSheet";
@@ -211,15 +211,24 @@ export function TodoItem({
           </View>
         </View>
         <View>
-          <CustomText
-            size="sm"
-            weight="regular"
-            className={`${
-              todo.completed ? "text-gray-400 line-through" : "text-gray-700"
-            }`}
-          >
-            {localText}
-          </CustomText>
+          <View className="flex-row items-center">
+            <CustomText
+              size="sm"
+              weight="regular"
+              className={`${
+                todo.completed ? "text-gray-400 line-through" : "text-gray-700"
+              }`}
+            >
+              {localText}
+            </CustomText>
+            {todo.isRoutine && (
+              <View className="ml-2 flex-row items-center">
+                <View className="w-5 h-5 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 items-center justify-center">
+                  <Repeat size={14} color="#EC4899" strokeWidth={3} />
+                </View>
+              </View>
+            )}
+          </View>
           {todo.reminderTime && (
             <View className="flex-row items-center mt-1">
               <View className="w-4 h-4 rounded-full bg-pink-100 items-center justify-center mr-1">
