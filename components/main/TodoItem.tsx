@@ -200,7 +200,7 @@ export function TodoItem({
   return (
     <View className="flex-row items-center justify-between py-3 px-3">
       <Pressable className="flex-row items-start flex-1" onPress={handleToggle}>
-        <View className="mr-2 mt-0.5" style={{ position: "relative" }}>
+        <View>
           <View
             className="w-6 h-6 rounded-md mr-3 border-2 items-center justify-center"
             style={{

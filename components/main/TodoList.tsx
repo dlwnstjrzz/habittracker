@@ -20,6 +20,23 @@ interface Todo {
   reminderTime?: string | null;
 }
 
+// 루틴 인터페이스 정의 추가
+interface RoutineWithCompleted {
+  id: string;
+  text: string;
+  categoryId: string;
+  startDate: string;
+  endDate?: string;
+  completedDates: { [date: string]: boolean };
+  frequency: {
+    type: "daily" | "weekly" | "monthly";
+    days?: number[];
+    dates?: number[];
+  };
+  lastCompletedDate?: string;
+  completed: boolean; // getRoutinesForDate에서 추가되는 속성
+}
+
 interface Category {
   id: string;
   title: string;
@@ -51,13 +68,33 @@ export default function TodoList() {
   useEffect(() => {
     const completedCount =
       todos[selectedDate]?.filter((todo) => todo.completed).length || 0;
-    setCompletedCount(completedCount);
-  }, [selectedDate, todos, setCompletedCount]);
+
+    // 루틴의 완료 상태도 포함
+    const routinesForDate = getRoutinesForDate(
+      selectedDate
+    ) as RoutineWithCompleted[];
+    const completedRoutinesCount = routinesForDate.filter(
+      (routine) => routine.completed
+    ).length;
+
+    setCompletedCount(completedCount + completedRoutinesCount);
+  }, [selectedDate, todos, setCompletedCount, getRoutinesForDate]);
 
   const handleTodoToggle = async (todoId: string, isRoutine: boolean) => {
     if (isRoutine) {
       // 루틴 완료 상태 토글 (선택된 날짜 전달)
       toggleRoutineCompletion(todoId, selectedDate);
+
+      // 루틴 완료 상태가 변경되면 완료된 할일 개수 업데이트
+      const updatedRoutinesForDate = getRoutinesForDate(
+        selectedDate
+      ) as RoutineWithCompleted[];
+      const completedTodosCount =
+        todos[selectedDate]?.filter((todo) => todo.completed).length || 0;
+      const completedRoutinesCount = updatedRoutinesForDate.filter(
+        (routine) => routine.completed
+      ).length;
+      setCompletedCount(completedTodosCount + completedRoutinesCount);
     } else {
       const updatedTodos = {
         ...todos,
@@ -214,7 +251,9 @@ export default function TodoList() {
   };
 
   // 선택된 날짜에 표시할 루틴 가져오기
-  const routinesForSelectedDate = getRoutinesForDate(selectedDate);
+  const routinesForSelectedDate = getRoutinesForDate(
+    selectedDate
+  ) as RoutineWithCompleted[];
 
   // 카테고리별 루틴 필터링
   const getRoutinesByCategory = useCallback(

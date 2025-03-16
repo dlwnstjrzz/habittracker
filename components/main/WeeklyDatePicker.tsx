@@ -26,6 +26,7 @@ import { getCompletedTodosCount } from "@/utils/storage";
 import { FlowerIcon } from "@/assets/icons/FlowerIcon";
 
 import { useTodoStore } from "@/store/useTodoStore";
+import { useRoutineStore } from "@/store/useRoutineStore";
 
 interface DateButtonProps {
   selected: boolean;
@@ -91,6 +92,7 @@ export default function WeeklyDatePicker() {
   const { selectedDate, setSelectedDate, completedCount } =
     useSelectedDateStore();
   const { todos } = useTodoStore();
+  const { routines } = useRoutineStore();
   const [completedCountsByDate, setCompletedCountsByDate] = useState<
     Record<string, number>
   >({});
@@ -147,18 +149,59 @@ export default function WeeklyDatePicker() {
       for (let i = 0; i < 7; i++) {
         const date = addDays(currentWeekStart, i);
         const dateStr = format(date, "yyyy-MM-dd");
-        // storage에서 가져오는 대신 todos에서 직접 계산
+
+        // 일반 할일 완료 개수 계산
         const todosForDate = todos[dateStr] || [];
-        const completedCount = todosForDate.filter(
+        const completedTodosCount = todosForDate.filter(
           (todo) => todo.completed
         ).length;
-        counts[dateStr] = completedCount;
+
+        // 루틴 완료 개수 계산
+        const routinesForDate = routines.filter((routine) => {
+          // 시작일 이후인지 확인 (날짜만 비교)
+          const startDate = new Date(routine.startDate);
+          const startDateStr = format(startDate, "yyyy-MM-dd");
+          const dateStr = format(date, "yyyy-MM-dd");
+
+          if (dateStr < startDateStr) return false;
+
+          // 종료일 이전인지 확인 (종료일이 있는 경우)
+          if (routine.endDate) {
+            const endDate = new Date(routine.endDate);
+            const endDateStr = format(endDate, "yyyy-MM-dd");
+            if (dateStr > endDateStr) return false;
+          }
+
+          // 주기에 따른 필터링
+          const { type, days, dates } = routine.frequency;
+
+          if (type === "daily") {
+            return true; // 매일 표시
+          }
+
+          if (type === "weekly" && days) {
+            return days.includes(date.getDay()); // 해당 요일에만 표시
+          }
+
+          if (type === "monthly" && dates) {
+            return dates.includes(date.getDate()); // 해당 날짜에만 표시
+          }
+
+          return false;
+        });
+
+        const completedRoutinesCount = routinesForDate.filter(
+          (routine) => routine.completedDates && routine.completedDates[dateStr]
+        ).length;
+
+        // 총 완료 개수 저장
+        counts[dateStr] = completedTodosCount + completedRoutinesCount;
       }
       setCompletedCountsByDate(counts);
     };
 
     fetchCompletedCounts();
-  }, [currentWeekStart, todos]);
+  }, [currentWeekStart, todos, routines]);
 
   return (
     <View className="px-4 py-3">

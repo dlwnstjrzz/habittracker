@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { nanoid } from "nanoid";
+import { format } from "date-fns";
 
 interface Routine {
   id: string;
@@ -113,19 +114,25 @@ export const useRoutineStore = create<RoutineState>()(
       getRoutinesForDate: (date) => {
         const { routines } = get();
         const targetDate = new Date(date);
+        // 시간 정보 제거하고 날짜만 비교하기 위해 날짜를 문자열로 변환
+        const targetDateStr = format(targetDate, "yyyy-MM-dd");
         const dayOfWeek = targetDate.getDay(); // 0-6 (일-토)
         const dayOfMonth = targetDate.getDate(); // 1-31
 
         return routines
           .filter((routine) => {
-            // 시작일 이후인지 확인
+            // 시작일 이후인지 확인 (날짜만 비교)
             const startDate = new Date(routine.startDate);
-            if (targetDate < startDate) return false;
+            const startDateStr = format(startDate, "yyyy-MM-dd");
+
+            // 날짜 문자열로 비교
+            if (targetDateStr < startDateStr) return false;
 
             // 종료일 이전인지 확인 (종료일이 있는 경우)
             if (routine.endDate) {
               const endDate = new Date(routine.endDate);
-              if (targetDate > endDate) return false;
+              const endDateStr = format(endDate, "yyyy-MM-dd");
+              if (targetDateStr > endDateStr) return false;
             }
 
             // 주기에 따른 필터링
