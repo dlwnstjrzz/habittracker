@@ -1,4 +1,4 @@
-import { View, Pressable } from "react-native";
+import { View, Pressable, GestureResponderEvent } from "react-native";
 import { CustomText } from "@/components/common/CustomText";
 import EggPage from "./EggPage";
 import { Character3D } from "./Character3D";
@@ -10,14 +10,22 @@ import texture from "../../../assets/models/Textures/T_Rabby_01.png";
 import { useCharacterStore } from "@/store/useCharacterStore";
 import * as Haptics from "expo-haptics";
 import { ExperienceBar } from "./ExperienceBar";
+import { EvolutionMessage } from "./EvolutionMessage";
+import { useState, useRef, useEffect } from "react";
 
 interface CharacterSectionProps {
   stage: number;
 }
 
 export default function CharacterSection({ stage }: CharacterSectionProps) {
-  const { isEvolutionReady, evolve, currentExperience, level, needExperience } =
-    useCharacterStore();
+  const {
+    isEvolutionReady,
+    evolve,
+    currentExperience,
+    level,
+    needExperience,
+    resetCharacter,
+  } = useCharacterStore();
 
   const handlePress = () => {
     if (isEvolutionReady) {
@@ -38,7 +46,6 @@ export default function CharacterSection({ stage }: CharacterSectionProps) {
     } else if (stage === 4) {
       modelUrl = rabbyQueen;
     }
-
     return (
       <Character3D
         modelUrl={modelUrl}
@@ -49,48 +56,31 @@ export default function CharacterSection({ stage }: CharacterSectionProps) {
   };
 
   return (
-    <View className="w-full h-[400px] bg-[#F6F5F9]">
+    <View className="flex-1 h-[400px] bg-[#F6F5F9]">
       <ExperienceBar
         experience={currentExperience}
         maxExperience={needExperience}
         level={level}
       />
+
       <View className="w-full h-full flex items-center relative justify-center">
         {isEvolutionReady && stage > 1 && (
-          <Pressable
-            className="absolute top-28 left-1/2 -translate-x-1/2 z-50"
+          <EvolutionMessage
+            message={
+              stage === 2
+                ? "루미가 반짝반짝✨"
+                : "루미의 최종 진화가 시작돼요✨"
+            }
+            subMessage="터치해서 진화시켜주세요!"
             onPress={handlePress}
-          >
-            <View className="bg-white/90 px-6 py-3 rounded-full border-2 border-blue-400 shadow-lg">
-              <View className="absolute -top-2 left-1/2 -translate-x-1/2">
-                <CustomText className="text-yellow-500 text-lg">✨</CustomText>
-              </View>
-              <CustomText className="text-blue-500 text-center font-medium">
-                {stage === 2 ? (
-                  <>
-                    <CustomText className="text-lg">
-                      루미가 반짝반짝✨
-                    </CustomText>
-                    {"\n"}
-                    <CustomText className="text-base">
-                      터치해서 진화시켜주세요!
-                    </CustomText>
-                  </>
-                ) : (
-                  <>
-                    <CustomText className="text-lg">
-                      루미의 최종 진화가 시작돼요✨
-                    </CustomText>
-                    {"\n"}
-                    <CustomText className="text-base">
-                      터치해서 진화시켜주세요!
-                    </CustomText>
-                  </>
-                )}
-              </CustomText>
-            </View>
-          </Pressable>
+          />
         )}
+        {/* 초기화 버튼 - 터치 이벤트를 가로채지 않도록 설정 */}
+        <View className="absolute bottom-0 left-0 right-0 z-20">
+          <Pressable onPress={resetCharacter}>
+            <CustomText className="text-center py-2">초기화</CustomText>
+          </Pressable>
+        </View>
         {renderCharacter()}
       </View>
     </View>

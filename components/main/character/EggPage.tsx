@@ -1,26 +1,62 @@
 import { View, Pressable } from "react-native";
+import { useState, useEffect } from "react";
 import { CustomText } from "@/components/common/CustomText";
+import { useCharacterStore } from "@/store/useCharacterStore";
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
   withSequence,
+  withRepeat,
   withTiming,
+  useSharedValue,
+  Easing,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { useCharacterStore } from "@/store/useCharacterStore";
+import { EvolutionMessage } from "./EvolutionMessage";
+
 export default function EggPage() {
   const { isEvolutionReady, evolve } = useCharacterStore();
   const rotateZ = useSharedValue(0);
+  const translateY = useSharedValue(0);
+
+  useEffect(() => {
+    if (isEvolutionReady) {
+      rotateZ.value = withRepeat(
+        withSequence(
+          withTiming(-5, { duration: 1000, easing: Easing.inOut(Easing.quad) }),
+          withTiming(5, { duration: 1000, easing: Easing.inOut(Easing.quad) })
+        ),
+        -1,
+        true
+      );
+    }
+  }, [isEvolutionReady]);
+
+  useEffect(() => {
+    translateY.value = withRepeat(
+      withSequence(
+        withTiming(-15, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+        withTiming(15, { duration: 1500, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      true
+    );
+  }, []);
 
   const animatedStyle = useAnimatedStyle(() => {
+    const rotationTransform = { rotateZ: `${rotateZ.value}deg` };
+    const translationTransform = { translateY: translateY.value };
+
     return {
-      transform: [{ rotateZ: `${rotateZ.value}deg` }],
+      marginTop: 40,
+      transform: [rotationTransform, translationTransform],
     };
   });
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
     if (isEvolutionReady) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       evolve();
       return;
     }
@@ -35,17 +71,19 @@ export default function EggPage() {
   };
 
   return (
-    <View className="w-full h-[400px] bg-[#F6F5F9]">
-      <View className="w-full h-full flex items-center justify-center">
+    <View className="flex-1 items-center justify-center">
+      <View className="items-center relative">
         {isEvolutionReady && (
-          <CustomText className="text-lg text-blue-500 mb-4">
-            부화 준비가 되었어요! 알을 터치해주세요!
-          </CustomText>
+          <EvolutionMessage
+            message="크리스탈을 터치해보세요!"
+            subMessage="누가 나올까요?"
+            onPress={handlePress}
+          />
         )}
         <Pressable onPress={handlePress}>
           <Animated.Image
-            source={require("@/assets/icons/egg.png")}
-            className="w-60 h-60"
+            source={require("@/assets/icons/crystal.png")}
+            className="w-72 h-72"
             style={animatedStyle}
           />
         </Pressable>

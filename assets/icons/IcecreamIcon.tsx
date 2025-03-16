@@ -8,9 +8,14 @@ import Svg, {
   Circle,
 } from "react-native-svg";
 
-export function IcecreamIcon() {
+interface IcecreamIconProps {
+  size?: number;
+  color?: string;
+}
+
+export function IcecreamIcon({ size = 24 }: IcecreamIconProps) {
   return (
-    <Svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+    <Svg width={size} height={size} viewBox="0 0 32 32" fill="none">
       <Path
         fillRule="evenodd"
         clipRule="evenodd"

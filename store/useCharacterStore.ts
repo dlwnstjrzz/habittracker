@@ -11,9 +11,13 @@ interface CharacterState {
   lastFedDate: string | null;
   feedCount: number;
   isEvolutionReady: boolean;
+  isLevelingUp: boolean; // 레벨업 진행 중 상태
+  canLevelUp: boolean; // 레벨업 가능 상태 추가
   feedCharacter: () => void;
+  startLevelUp: () => void; // 레벨업 시작 함수 추가
   evolve: () => void;
   hatchEgg: () => void;
+  completeLevelUp: () => void;
 }
 
 export const useCharacterStore = create<CharacterState>()(
@@ -22,20 +26,27 @@ export const useCharacterStore = create<CharacterState>()(
       stage: 1,
       experience: 0,
       level: 1,
-      currentExperience: 0, // 초기값 0
+      currentExperience: 0,
       needExperience: 3,
       lastFedDate: null,
       feedCount: 0,
       isEvolutionReady: false,
+      isLevelingUp: false,
+      canLevelUp: false, // 초기값은 false
       feedCharacter: () => {
         const {
           stage,
           experience,
           lastFedDate,
           feedCount,
-          level,
           currentExperience,
+          needExperience,
+          isLevelingUp,
         } = get();
+
+        // 레벨업 진행 중이면 무시
+        if (isLevelingUp) return;
+
         const today = new Date().toISOString().split("T")[0];
 
         // 날짜가 바뀌면 feedCount 초기화
@@ -44,37 +55,52 @@ export const useCharacterStore = create<CharacterState>()(
         }
 
         if (feedCount < 300) {
-          const newState = {
-            experience: experience + 1,
-            currentExperience: currentExperience + 1,
+          // 경험치 1 증가
+          const newExperience = experience + 1;
+          const newCurrentExperience = currentExperience + 1;
+
+          // 레벨업 가능 상태 체크
+          const shouldEnableLevelUp = newCurrentExperience >= needExperience;
+
+          set({
+            experience: newExperience,
+            currentExperience: newCurrentExperience,
             feedCount: feedCount + 1,
             lastFedDate: today,
-            stage,
-            level,
-            needExperience: level < 12 ? 3 : 5,
-            isEvolutionReady: false,
-          };
+            canLevelUp: shouldEnableLevelUp, // 레벨업 가능 상태 설정
+          });
 
-          // 레벨업 체크 (feedCount가 3이 되면 레벨업)
-          if (feedCount >= 2) {
-            // 2에서 체크하는 이유는 현재 증가된 feedCount까지 포함해서 3이 되기 때문
-            newState.level = level + 1;
-            newState.feedCount = 0;
-            newState.currentExperience = 0; // 레벨업하면 현재 경험치 초기화
-            newState.needExperience = newState.level < 12 ? 3 : 5;
-          }
-
-          // 진화 조건 체크 (experience 기반)
+          // 진화 조건 체크 (경험치 기반)
           if (
-            (stage === 1 && experience + 1 >= 3) ||
-            (stage === 2 && experience + 1 >= 9) ||
-            (stage === 3 && experience + 1 >= 21)
+            (stage === 1 && newExperience >= 3) ||
+            (stage === 2 && newExperience >= 9) ||
+            (stage === 3 && newExperience >= 21)
           ) {
-            newState.isEvolutionReady = true;
+            set({ isEvolutionReady: true });
           }
-
-          set(newState);
         }
+      },
+      startLevelUp: () => {
+        const { canLevelUp } = get();
+        // 레벨업 가능 상태일 때만 레벨업 시작
+        if (canLevelUp) {
+          set({ isLevelingUp: true });
+        }
+      },
+      completeLevelUp: () => {
+        const { level, needExperience } = get();
+
+        // 레벨 증가, 경험치 초기화, 필요 경험치 업데이트
+        const newLevel = level + 1;
+        const newNeedExperience = newLevel < 12 ? 3 : 5;
+
+        set({
+          level: newLevel,
+          currentExperience: 0,
+          needExperience: newNeedExperience,
+          isLevelingUp: false,
+          canLevelUp: false, // 레벨업 후 canLevelUp 초기화
+        });
       },
       evolve: () => {
         const { stage, isEvolutionReady } = get();
@@ -99,6 +125,8 @@ export const useCharacterStore = create<CharacterState>()(
           lastFedDate: null,
           feedCount: 0,
           isEvolutionReady: false,
+          isLevelingUp: false,
+          canLevelUp: false,
         });
       },
     }),
