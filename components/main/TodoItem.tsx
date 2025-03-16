@@ -69,6 +69,7 @@ export function TodoItem({
 
   useEffect(() => {
     setLocalText(todo.text);
+    setEditText(todo.text);
   }, [todo.text]);
 
   const handleMorePress = () => {
@@ -77,6 +78,7 @@ export function TodoItem({
 
   const handleEditPress = () => {
     actionSheetRef.current?.dismiss();
+    setEditText(localText);
     setIsEditing(true);
   };
 
