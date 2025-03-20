@@ -83,7 +83,7 @@ function Model({
         ref={modelRef}
         object={fbxModel}
         scale={0.12}
-        position={[0, -2, 0]}
+        position={[0, -3, 0]}
         rotation={[0, rotation, 0]}
       />
     </>

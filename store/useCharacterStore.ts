@@ -55,7 +55,7 @@ export const useCharacterStore = create<CharacterState>()(
           set({ lastFedDate: today, feedCount: 0 });
         }
 
-        if (feedCount < 300) {
+        if (feedCount < 3) {
           // 경험치 1 증가
           const newExperience = experience + 1;
           const newCurrentExperience = currentExperience + 1;
