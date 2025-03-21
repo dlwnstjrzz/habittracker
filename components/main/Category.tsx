@@ -33,6 +33,7 @@ interface Routine {
   endDate?: string;
   completed: boolean;
   completedDates: { [date: string]: boolean };
+  reminderTime?: string | null;
   frequency: {
     type: "daily" | "weekly" | "monthly";
     days?: number[];
@@ -50,6 +51,7 @@ interface CategoryProps {
   onTodoEdit: (todoId: string, newText: string) => void;
   onTodoDelete: (todoId: string) => void;
   onTodoSetReminder: (todoId: string, time?: string | null) => void;
+  onRoutineSetReminder: (routineId: string, time?: string | null) => void;
   onDeleteRoutine: (routineId: string) => void;
   onUpdate: (categoryId: string, updates: Partial<Category>) => void;
   onDelete: (categoryId: string) => void;
@@ -65,6 +67,7 @@ export default function Category({
   onTodoEdit,
   onTodoDelete,
   onTodoSetReminder,
+  onRoutineSetReminder,
   onDeleteRoutine,
   onUpdate,
   onDelete,
@@ -138,7 +141,7 @@ export default function Category({
         ))}
         {routines.map((routine) => (
           <TodoItem
-            key={routine.id}
+            key={`routine-${routine.id}`}
             todo={{
               id: routine.id,
               text: routine.text,
@@ -146,12 +149,13 @@ export default function Category({
               date: routine.startDate,
               categoryId: routine.categoryId,
               isRoutine: true,
+              reminderTime: routine.reminderTime,
             }}
             color={category.color}
             onToggle={() => onTodoToggle(routine.id, true)}
-            onEdit={onTodoEdit}
-            onDelete={onTodoDelete}
-            onSetReminder={onTodoSetReminder}
+            onEdit={(id, newText) => onTodoEdit(id, newText)}
+            onDelete={() => {}}
+            onSetReminder={(id, time) => onRoutineSetReminder(id, time)}
             onDeleteRoutine={onDeleteRoutine}
           />
         ))}

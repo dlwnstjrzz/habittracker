@@ -2,7 +2,6 @@ import { forwardRef } from "react";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { isBefore, startOfDay } from "date-fns";
 import { CommonModal, ActionButton } from "../common/CommonModal";
-import React from "react";
 
 interface TodoActionSheetProps {
   onEdit: () => void;

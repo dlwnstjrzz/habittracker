@@ -89,11 +89,10 @@ export const EditCategoryModal = forwardRef<
             style={{
               fontSize: 16,
               fontFamily: "SpoqaHanSansNeo-Medium",
-              color: "#374151",
+              color: getColorValue(selectedColor),
               borderBottomColor: getColorValue(selectedColor),
             }}
             placeholderTextColor="#9CA3AF"
-            autoFocus
           />
         </View>
 
@@ -118,26 +117,24 @@ export const EditCategoryModal = forwardRef<
             </XStack>
           </YStack>
         </View>
-      </View>
-
-      {/* 하단 버튼 */}
-      <View className="mt-auto mb-4">
-        <Pressable
-          onPress={handleSubmit}
-          disabled={!title.trim()}
-          className={`py-4 rounded-xl ${
-            title.trim() ? "bg-gray-900" : "bg-gray-200"
-          }`}
-        >
-          <CustomText
-            size="base"
-            weight="bold"
-            className={title.trim() ? "text-white" : "text-gray-400"}
-            style={{ textAlign: "center" }}
+        <View className="mt-auto mb-4">
+          <Pressable
+            onPress={handleSubmit}
+            disabled={!title.trim()}
+            className={`py-4 rounded-xl ${
+              title.trim() ? "bg-gray-900" : "bg-gray-200"
+            }`}
           >
-            수정하기
-          </CustomText>
-        </Pressable>
+            <CustomText
+              size="base"
+              weight="bold"
+              className={title.trim() ? "text-white" : "text-gray-400"}
+              style={{ textAlign: "center" }}
+            >
+              수정하기
+            </CustomText>
+          </Pressable>
+        </View>
       </View>
     </CommonModal>
   );

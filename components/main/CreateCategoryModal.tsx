@@ -70,12 +70,12 @@ export const CreateCategoryModal = forwardRef<
             style={{
               fontSize: 16,
               fontFamily: "SpoqaHanSansNeo-Medium",
-              color: "#374151",
+              color:
+                COLORS.find((c) => c.id === selectedColor)?.value || "#374151",
               borderBottomColor:
                 COLORS.find((c) => c.id === selectedColor)?.value || "#E5E7EB",
             }}
             placeholderTextColor="#9CA3AF"
-            autoFocus
           />
         </View>
 

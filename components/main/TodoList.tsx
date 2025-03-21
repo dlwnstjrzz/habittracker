@@ -28,6 +28,7 @@ interface RoutineWithCompleted {
   startDate: string;
   endDate?: string;
   completedDates: { [date: string]: boolean };
+  reminderTime?: string | null;
   frequency: {
     type: "daily" | "weekly" | "monthly";
     days?: number[];
@@ -47,8 +48,12 @@ export default function TodoList() {
   const { categories, todos, setCategories, setTodos, loadData, saveTodoData } =
     useTodoStore();
   const { selectedDate, setCompletedCount } = useSelectedDateStore();
-  const { getRoutinesForDate, toggleRoutineCompletion, deleteRoutine } =
-    useRoutineStore();
+  const {
+    getRoutinesForDate,
+    toggleRoutineCompletion,
+    deleteRoutine,
+    setRoutineReminder,
+  } = useRoutineStore();
 
   const [isAddingTodo, setIsAddingTodo] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
@@ -250,6 +255,16 @@ export default function TodoList() {
     await saveTodoData({ categories, todos: updatedTodos });
   };
 
+  // 루틴 알림 설정 함수 추가
+  const handleSetRoutineReminder = (
+    routineId: string,
+    time?: string | null
+  ) => {
+    if (time !== undefined) {
+      setRoutineReminder(routineId, time);
+    }
+  };
+
   // 선택된 날짜에 표시할 루틴 가져오기
   const routinesForSelectedDate = getRoutinesForDate(
     selectedDate
@@ -283,6 +298,7 @@ export default function TodoList() {
           onTodoEdit={(todoId, newText) => handleEditTodo(todoId, newText)}
           onTodoDelete={(todoId) => handleDeleteTodo(todoId)}
           onTodoSetReminder={handleSetReminder}
+          onRoutineSetReminder={handleSetRoutineReminder}
           onDeleteRoutine={handleDeleteRoutine}
           onUpdate={handleUpdateCategory}
           onDelete={handleDeleteCategory}

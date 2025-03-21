@@ -11,6 +11,7 @@ interface Routine {
   startDate: string;
   endDate?: string;
   completedDates: { [date: string]: boolean };
+  reminderTime?: string | null; // 알림 시간 추가
   frequency: {
     type: "daily" | "weekly" | "monthly";
     days?: number[]; // weekly인 경우 요일 (0-6, 0:일요일)
@@ -44,6 +45,9 @@ interface RoutineState {
 
   // 루틴 수정
   updateRoutine: (routineId: string, updates: Partial<Routine>) => void;
+
+  // 루틴 알림 설정
+  setRoutineReminder: (routineId: string, time: string | null) => void;
 }
 
 export const useRoutineStore = create<RoutineState>()(
@@ -63,6 +67,7 @@ export const useRoutineStore = create<RoutineState>()(
           categoryId: todo.categoryId,
           startDate: todo.date,
           completedDates: {}, // 빈 객체로 초기화
+          reminderTime: null, // 알림 정보 초기화
           frequency: {
             type: "daily",
           },
@@ -172,6 +177,15 @@ export const useRoutineStore = create<RoutineState>()(
             routine.id === routineId ? { ...routine, ...updates } : routine
           ),
         })),
+
+      setRoutineReminder: (routineId, time) =>
+        set((state) => ({
+          routines: state.routines.map((routine) =>
+            routine.id === routineId
+              ? { ...routine, reminderTime: time }
+              : routine
+          ),
+        })),
     }),
     {
       name: "routine-storage",
@@ -192,6 +206,7 @@ export const useRoutineStore = create<RoutineState>()(
                 completedDates: isCompleted ? { [lastDate]: true } : {},
               };
             }
+
             return routine;
           });
 

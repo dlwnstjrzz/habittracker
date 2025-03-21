@@ -133,7 +133,7 @@ export default function CharacterSection({ stage }: CharacterSectionProps) {
         />
 
         {/* 초기화 버튼 */}
-        {/* <View className="absolute bottom-0 left-0 right-0 z-20">
+        <View className="absolute bottom-0 left-0 right-0 z-20">
           <Pressable onPress={resetCharacter}>
             <CustomText className="text-center py-2">초기화</CustomText>
           </Pressable>
@@ -143,7 +143,7 @@ export default function CharacterSection({ stage }: CharacterSectionProps) {
           <Pressable onPress={handleResetOnboarding}>
             <CustomText className="text-center py-2">온보딩 보기</CustomText>
           </Pressable>
-        </View> */}
+        </View>
       </View>
     </View>
   );

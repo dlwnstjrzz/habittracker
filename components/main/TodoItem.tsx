@@ -13,9 +13,9 @@ import {
   cancelNotification,
 } from "@/utils/notification";
 import { useRoutineStore } from "@/store/useRoutineStore";
-import { nanoid } from "nanoid";
 import { useCharacterStore } from "@/store/useCharacterStore";
-
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { AlarmIcon } from "@/assets/icons/AlarmIcon";
 interface TodoItemProps {
   todo: {
     id: string;
@@ -136,19 +136,24 @@ export function TodoItem({
       }
 
       const [, hours, minutes, period] = matches;
-      const koreanPeriod = period === "AM" ? "오전" : "오후";
+      const formattedMinutes = minutes.padStart(2, "0");
 
-      return `${koreanPeriod} ${hours}:${minutes}`;
+      return `${period} ${hours}:${formattedMinutes}`;
     } catch (error) {
       console.error("Error parsing time:", dateStr);
       return "";
     }
   };
 
-  const handleMakeRoutine = () => {
+  const handleMakeRoutine = async () => {
     try {
       const createRoutineFromTodo =
         useRoutineStore.getState().createRoutineFromTodo;
+
+      // 기존 알람이 있다면 취소
+      if (todo.reminderTime) {
+        await cancelNotification(todo.id);
+      }
 
       // 루틴 생성
       createRoutineFromTodo({
@@ -236,10 +241,14 @@ export function TodoItem({
           </View>
           {todo.reminderTime && (
             <View className="flex-row items-center mt-1">
-              <View className="w-4 h-4 rounded-full bg-pink-100 items-center justify-center mr-1">
-                <Bell size={10} color="#EC4899" />
-              </View>
-              <CustomText size="xs" className="text-pink-400">
+              <AlarmIcon size={18} color="#9CA3AF" style={{ marginRight: 3 }} />
+              {/* <MaterialCommunityIcons
+                name="alarm-snooze"
+                size={15}
+                color="#4B5563"
+                style={{ marginRight: 4 }}
+              /> */}
+              <CustomText size="xs" className="text-gray-800 font-medium">
                 {formatTime(todo.reminderTime)}
               </CustomText>
             </View>
@@ -259,13 +268,10 @@ export function TodoItem({
         onDelete={handleDeletePress}
         onSetReminder={handleSetReminder}
         onMakeRoutine={handleMakeRoutine}
+        onDeleteRoutine={onDeleteRoutine}
         todoDate={todo.date}
         isRoutine={todo.isRoutine}
-        onDeleteRoutine={
-          todo.isRoutine && onDeleteRoutine
-            ? () => onDeleteRoutine(todo.id)
-            : undefined
-        }
+        routineId={todo.id}
       />
 
       <ReminderModal

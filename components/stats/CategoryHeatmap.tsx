@@ -196,23 +196,29 @@ function processDataForHeatmap(todos: Record<string, TodoData[]>) {
   return result;
 }
 
-export function CategoryHeatmap({ viewMode }: HeatmapProps) {
+export function CategoryHeatmap({
+  viewMode,
+  startDate,
+  endDate,
+}: HeatmapProps) {
   const { categories, todos, loadData } = useTodoStore();
   const [heatmapData, setHeatmapData] = useState<HeatmapProps["data"]>([]);
-  const monthDatesData = getMonthDates(viewMode);
+  const monthDatesData = useMemo(() => getMonthDates(viewMode), [viewMode]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const scrollViewRefs = useRef<{ [key: string]: ScrollView | null }>({});
 
+  // 할일 데이터를 히트맵 데이터로 처리
   const processedHeatmapData = useMemo(() => {
     return processDataForHeatmap(todos);
   }, [todos]);
 
+  // 히트맵 데이터 설정
   useEffect(() => {
     setHeatmapData(processedHeatmapData);
     setIsDataLoaded(true);
   }, [processedHeatmapData]);
 
-  // 초기 로드
+  // 데이터 로드
   useEffect(() => {
     loadData();
   }, []);

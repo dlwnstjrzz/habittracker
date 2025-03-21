@@ -62,7 +62,7 @@ export const CommonModal = forwardRef<BottomSheetModal, CommonModalProps>(
         <BottomSheetView className="flex-1 pt-2 pb-6">
           {/* 헤더 */}
           {(title || showCloseButton) && (
-            <View className="flex-row items-center justify-between px-6 py-4">
+            <View className="flex-row items-center justify-between px-6">
               {title && (
                 <CustomText size="lg" weight="bold" className="text-gray-900">
                   {title}
